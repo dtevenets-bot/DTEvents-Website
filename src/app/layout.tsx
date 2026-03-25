@@ -20,11 +20,11 @@ export const metadata: Metadata = {
   keywords: ["DT Events", "Events", "Products", "Commissions", "Manufacturing"],
   authors: [{ name: "DT Events Team" }],
   icons: {
-    icon: "/logo.svg",
+    icon: "/logo.png",
   },
   openGraph: {
     title: "DT Events",
-    description: "Premium Events & Products",
+    description: "Premium Products",
     type: "website",
   },
   twitter: {
