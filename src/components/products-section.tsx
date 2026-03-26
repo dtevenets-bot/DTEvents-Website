@@ -125,12 +125,17 @@ function ProductCard({ product }: { product: typeof products[0] }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Spotlight Effect */}
+      {/* Border Spotlight Effect - Only on the border */}
       <div
-        className="pointer-events-none absolute inset-0 z-10 transition-opacity duration-300"
+        className="pointer-events-none absolute inset-0 z-20 rounded-lg transition-opacity duration-300"
         style={{
           opacity: isHovered ? 1 : 0,
-          background: `radial-gradient(400px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.15), transparent 40%)`,
+          background: `radial-gradient(250px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.6), transparent 50%)`,
+          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
+          mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          maskComposite: 'exclude',
+          padding: '2px',
         }}
       />
 
@@ -149,7 +154,6 @@ function ProductCard({ product }: { product: typeof products[0] }) {
         <p className="text-xs text-muted-foreground mb-2">Made by {product.maker}</p>
         <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
       </div>
-      <div className="absolute inset-0 border-2 border-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
     </div>
   )
 }
