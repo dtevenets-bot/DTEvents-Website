@@ -130,7 +130,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
         className="pointer-events-none absolute inset-0 z-20 rounded-lg transition-opacity duration-300"
         style={{
           opacity: isHovered ? 1 : 0,
-          background: `radial-gradient(250px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,1), transparent 40%)`,
+          background: `radial-gradient(250px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,1), transparent 30%)`,
           WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
           WebkitMaskComposite: 'xor',
           mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
