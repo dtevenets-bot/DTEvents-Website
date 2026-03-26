@@ -35,6 +35,51 @@ const commissions = [
   },
 ]
 
+function CommissionCard({ commission }: { commission: typeof commissions[0] }) {
+  const cardRef = React.useRef<HTMLDivElement>(null)
+  const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 })
+  const [isHovered, setIsHovered] = React.useState(false)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    setMousePosition({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    })
+  }
+
+  return (
+    <div
+      ref={cardRef}
+      className="group relative overflow-hidden rounded-lg border border-border bg-card cursor-pointer"
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Spotlight Effect */}
+      <div
+        className="pointer-events-none absolute inset-0 z-10 transition-opacity duration-300"
+        style={{
+          opacity: isHovered ? 1 : 0,
+          background: `radial-gradient(400px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.15), transparent 40%)`,
+        }}
+      />
+
+      <div className="relative aspect-[4/3] overflow-hidden">
+        <img src={commission.frontImage} alt={commission.name} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 opacity-100 group-hover:opacity-0" />
+        <img src={commission.backImage} alt={`${commission.name} - Back`} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
+        <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 text-black rounded-full text-xs font-semibold">COMMISSION</div>
+      </div>
+      <div className="p-5">
+        <h3 className="text-base font-semibold mb-2 group-hover:text-muted-foreground transition-colors">{commission.name}</h3>
+        <p className="text-sm text-muted-foreground line-clamp-2">{commission.description}</p>
+      </div>
+      <div className="absolute inset-0 border-2 border-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
+    </div>
+  )
+}
+
 export function CommissionsSection() {
   return (
     <section id="commissions" className="py-20 sm:py-32 bg-background">
@@ -47,18 +92,7 @@ export function CommissionsSection() {
 
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {commissions.map((commission) => (
-            <div key={commission.id} className="group relative overflow-hidden rounded-lg border border-border bg-card cursor-pointer">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img src={commission.frontImage} alt={commission.name} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 opacity-100 group-hover:opacity-0" />
-                <img src={commission.backImage} alt={`${commission.name} - Back`} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
-                <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 text-black rounded-full text-xs font-semibold">COMMISSION</div>
-              </div>
-              <div className="p-5">
-                <h3 className="text-base font-semibold mb-2 group-hover:text-muted-foreground transition-colors">{commission.name}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-2">{commission.description}</p>
-              </div>
-              <div className="absolute inset-0 border-2 border-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
-            </div>
+            <CommissionCard key={commission.id} commission={commission} />
           ))}
         </motion.div>
 
