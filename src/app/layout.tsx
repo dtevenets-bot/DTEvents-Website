@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { ThemeProvider } from "@/components/theme-provider";
+import { Providers } from "@/components/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,22 +15,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DT Events - Premium Events & Products",
-  description: "DT Events delivers quality product manufacturing, custom commissions, and curated bi-weekly events. Experience excellence in every detail.",
-  keywords: ["DT Events", "Events", "Products", "Commissions", "Manufacturing"],
+  title: "DT Events - Premium Product Hub",
+  description: "DT Events delivers quality product manufacturing, custom commissions, and curated bi-weekly events. Browse, purchase, and download premium Roblox products.",
+  keywords: ["DT Events", "Roblox", "Products", "Events", "Commissions", "Manufacturing", "Flux Kit"],
   authors: [{ name: "DT Events Team" }],
   icons: {
     icon: "/logo.png",
   },
   openGraph: {
-    title: "DT Events",
-    description: "Premium Products",
+    title: "DT Events - Product Hub",
+    description: "Premium Roblox Products",
     type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "DT Events",
-    description: "Premium Events & Products",
   },
 };
 
@@ -44,15 +39,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <Providers>
           {children}
           <Toaster />
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

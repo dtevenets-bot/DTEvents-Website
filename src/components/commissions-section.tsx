@@ -57,7 +57,7 @@ function CommissionCard({ commission }: { commission: typeof commissions[0] }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Border Spotlight Effect - Only on the border */}
+
       <div
         className="pointer-events-none absolute inset-0 z-20 rounded-lg transition-opacity duration-300"
         style={{

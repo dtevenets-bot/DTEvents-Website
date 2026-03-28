@@ -2,13 +2,22 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useQuery } from "@tanstack/react-query"
 import { Volume2, VolumeX, ChevronLeft, ChevronRight } from "lucide-react"
 
 const VIDEO_ID = "LFbbv8wL00k"
 
-const slides = [
+interface AnnouncedProduct {
+  name: string
+  description: string
+  price: number
+  images: { front: string; back: string }
+  announcedAt: number
+}
+
+const defaultSlides = [
   {
-    id: 1,
+    id: "default-1",
     title: "Crafting Excellence.",
     subtitle: "Delivering Experiences.",
     description: "Premium product manufacturing and bespoke custom commissions. We transform visions into reality with uncompromising quality.",
@@ -18,17 +27,7 @@ const slides = [
     secondaryHref: "#services",
   },
   {
-    id: 2,
-    title: "🎉 NEW RELEASE!",
-    subtitle: "Pioneer DJM V10 Mixer",
-    description: "Professional DJ mixer with premium sound quality and intuitive controls. Now available for 130R$!",
-    buttonText: "View Product",
-    buttonHref: "#products",
-    secondaryText: "All Products",
-    secondaryHref: "#products",
-  },
-  {
-    id: 3,
+    id: "default-3",
     title: "Custom Commissions.",
     subtitle: "Built For You.",
     description: "Need something unique? We create bespoke fixtures tailored to your exact specifications. Join our Discord to discuss.",
@@ -38,7 +37,7 @@ const slides = [
     secondaryHref: "#commissions",
   },
   {
-    id: 4,
+    id: "default-4",
     title: "Flux Kit Ready.",
     subtitle: "Plug & Play.",
     description: "Most of our products work with Flux Kit straight from the box. No extra setup required – just drop and enjoy.",
@@ -56,14 +55,43 @@ export function HeroSection() {
   const [isMuted, setIsMuted] = React.useState(true)
   const [currentSlide, setCurrentSlide] = React.useState(0)
 
-  // Auto-rotate slides every 5 seconds
+  const { data: siteConfig } = useQuery({
+    queryKey: ["site-config"],
+    queryFn: async () => {
+      const res = await fetch("/api/site-config")
+      if (!res.ok) return { announcedProduct: null }
+      return res.json()
+    },
+    refetchInterval: 60000, // refresh every minute to pick up new announcements
+  })
+
+  const announcedProduct = siteConfig?.announcedProduct as AnnouncedProduct | null
+
+  // Build slides: insert announcement slide at index 1 if it exists
+  const slides = React.useMemo(() => {
+    if (!announcedProduct?.name) return defaultSlides
+
+    const announcementSlide = {
+      id: "announcement",
+      title: "🎉 NEW RELEASE!",
+      subtitle: announcedProduct.name,
+      description: `${announcedProduct.description} ${announcedProduct.price > 0 ? `Now available for ${announcedProduct.price}R$!` : "Available for free!"}`,
+      buttonText: "View Product",
+      buttonHref: "#products",
+      secondaryText: "All Products",
+      secondaryHref: "#products",
+    }
+
+    // Insert at position 1 (after the first default slide)
+    return [defaultSlides[0], announcementSlide, ...defaultSlides.slice(1)]
+  }, [announcedProduct])
+
   React.useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
     }, 5000)
     return () => clearInterval(interval)
-  }, [])
-
+  }, [slides.length])
 
   React.useEffect(() => {
     const section = sectionRef.current
@@ -97,29 +125,21 @@ export function HeroSection() {
     setIsMuted(!isMuted)
   }
 
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index)
-  }
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length)
-  }
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
-  }
+  const goToSlide = (index: number) => setCurrentSlide(index)
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length)
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
 
   const embedUrl = `https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&iv_load_policy=3&disablekb=1`
 
+  const current = slides[currentSlide]
+
   return (
     <section ref={sectionRef} id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Video Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <iframe ref={iframeRef} src={embedUrl} className="absolute top-1/2 left-1/2 min-w-[100vw] min-h-[100vh] w-auto h-auto -translate-x-1/2 -translate-y-1/2 aspect-video" style={{ border: 0 }} allow="autoplay; encrypted-media" allowFullScreen onLoad={() => setIsLoaded(true)} title="DT Events Hero Video" />
         <div className="absolute inset-0 backdrop-blur-[4px] bg-black/30" />
       </div>
 
-      {/* Content */}
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto w-full">
         <AnimatePresence mode="wait">
           <motion.div
@@ -130,94 +150,53 @@ export function HeroSection() {
             transition={{ duration: 0.5 }}
           >
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-              {slides[currentSlide].title}
+              {current.title}
               <br />
-              <span className="text-white/80">{slides[currentSlide].subtitle}</span>
+              <span className="text-white/80">{current.subtitle}</span>
             </h1>
-            
+
             <p className="text-lg sm:text-xl md:text-2xl text-white/70 mb-8 max-w-3xl mx-auto leading-relaxed">
-              {slides[currentSlide].description}
+              {current.description}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              {slides[currentSlide].buttonHref.startsWith("http") ? (
-                <a
-                  href={slides[currentSlide].buttonHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-8 py-4 bg-white text-black font-semibold rounded-md hover:bg-white/90 transition-colors duration-300"
-                >
-                  {slides[currentSlide].buttonText}
+              {current.buttonHref.startsWith("http") ? (
+                <a href={current.buttonHref} target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-white text-black font-semibold rounded-md hover:bg-white/90 transition-colors duration-300">
+                  {current.buttonText}
                 </a>
               ) : (
-                <a
-                  href={slides[currentSlide].buttonHref}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    document.querySelector(slides[currentSlide].buttonHref)?.scrollIntoView({ behavior: "smooth" })
-                  }}
-                  className="px-8 py-4 bg-white text-black font-semibold rounded-md hover:bg-white/90 transition-colors duration-300"
-                >
-                  {slides[currentSlide].buttonText}
+                <a href={current.buttonHref} onClick={(e) => { e.preventDefault(); document.querySelector(current.buttonHref)?.scrollIntoView({ behavior: "smooth" }) }} className="px-8 py-4 bg-white text-black font-semibold rounded-md hover:bg-white/90 transition-colors duration-300">
+                  {current.buttonText}
                 </a>
               )}
-              {slides[currentSlide].secondaryHref.startsWith("http") ? (
-                <a
-                  href={slides[currentSlide].secondaryHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-8 py-4 border-2 border-white text-white font-semibold rounded-md hover:bg-white hover:text-black transition-colors duration-300"
-                >
-                  {slides[currentSlide].secondaryText}
+              {current.secondaryHref.startsWith("http") ? (
+                <a href={current.secondaryHref} target="_blank" rel="noopener noreferrer" className="px-8 py-4 border-2 border-white text-white font-semibold rounded-md hover:bg-white hover:text-black transition-colors duration-300">
+                  {current.secondaryText}
                 </a>
               ) : (
-                <a
-                  href={slides[currentSlide].secondaryHref}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    document.querySelector(slides[currentSlide].secondaryHref)?.scrollIntoView({ behavior: "smooth" })
-                  }}
-                  className="px-8 py-4 border-2 border-white text-white font-semibold rounded-md hover:bg-white hover:text-black transition-colors duration-300"
-                >
-                  {slides[currentSlide].secondaryText}
+                <a href={current.secondaryHref} onClick={(e) => { e.preventDefault(); document.querySelector(current.secondaryHref)?.scrollIntoView({ behavior: "smooth" }) }} className="px-8 py-4 border-2 border-white text-white font-semibold rounded-md hover:bg-white hover:text-black transition-colors duration-300">
+                  {current.secondaryText}
                 </a>
               )}
             </div>
           </motion.div>
         </AnimatePresence>
 
-        {/* Slide Indicators */}
         <div className="flex items-center justify-center gap-3 mt-12">
-          <button
-            onClick={prevSlide}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-            aria-label="Previous slide"
-          >
+          <button onClick={prevSlide} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" aria-label="Previous slide">
             <ChevronLeft className="h-5 w-5 text-white" />
           </button>
-          
+
           {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide ? "bg-white w-8" : "bg-white/40 hover:bg-white/60"
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
+            <button key={slides[index].id} onClick={() => goToSlide(index)} className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide ? "bg-white w-8" : "bg-white/40 hover:bg-white/60"}`} aria-label={`Go to slide ${index + 1}`} />
           ))}
-          
-          <button
-            onClick={nextSlide}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-            aria-label="Next slide"
-          >
+
+          <button onClick={nextSlide} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" aria-label="Next slide">
             <ChevronRight className="h-5 w-5 text-white" />
           </button>
         </div>
       </div>
 
-      {/* Sound Toggle Button */}
       <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
