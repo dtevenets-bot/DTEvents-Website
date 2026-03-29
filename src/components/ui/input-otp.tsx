@@ -91,12 +91,12 @@ function InputOTP({
             "border-field dark:bg-field/30 border-field relative flex h-9 w-9 items-center justify-center border-y border-r text-center text-sm shadow-xs transition-all outline-none first:rounded-l-md first:border-l last:rounded-r-md focus-visible:border-focus-ring focus-visible:ring-focus-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
-          onChange={(e) => handleInput(index, e.target.value.replace(/[^0-9]/g, ""))}
+          onChange={(e) => handleInput(index, e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
           onKeyDown={(e) => handleKeyDown(index, e)}
           onFocus={() => handleFocus(index)}
           onPaste={(e) => {
             e.preventDefault()
-            const pasted = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, maxLength)
+            const pasted = e.clipboardData.getData("text").replace(/[^a-zA-Z0-9]/g, "").slice(0, maxLength)
             if (pasted) {
               setValue(pasted)
               const nextIndex = Math.min(pasted.length, maxLength - 1)
