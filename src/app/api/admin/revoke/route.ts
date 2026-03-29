@@ -1,97 +1,107 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { db, parseProduct } from '@/lib/firebase'
-import type { AuditLog } from '@/types'
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/firebase';
+import { parseProduct } from '@/lib/firebase';
+import type { AuditLog, UserRole } from '@/types';
 
-// POST /api/admin/revoke - Revoke a product from a user (admin+ required)
-export async function POST(request: NextRequest) {
+const ROLE_HIERARCHY: Record<UserRole, number> = {
+  owner: 4,
+  admin: 3,
+  booster: 2,
+  user: 1,
+};
+
+// ============================================================
+// POST /api/admin/revoke - Revoke a product from a user (admin+)
+// ============================================================
+
+export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await getServerSession(authOptions);
 
-    const role = session.user.role as string
-    if (role !== 'admin' && role !== 'owner') {
-      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
-    }
-
-    const body = await request.json()
-    const { targetDiscordId, productId, reason } = body as {
-      targetDiscordId: string
-      productId: string
-      reason?: string
-    }
-
-    if (!targetDiscordId || !productId) {
+    if (
+      !session?.user ||
+      !ROLE_HIERARCHY[session.user.role] ||
+      ROLE_HIERARCHY[session.user.role] < ROLE_HIERARCHY['admin']
+    ) {
       return NextResponse.json(
-        { error: 'Missing required fields: targetDiscordId, productId' },
+        { error: 'Unauthorized. Admin or higher access required.' },
+        { status: 403 }
+      );
+    }
+
+    const body = await req.json();
+    const { userProductId } = body;
+
+    if (!userProductId) {
+      return NextResponse.json(
+        { error: 'userProductId is required.' },
         { status: 400 }
-      )
+      );
     }
 
-    // Check user has the product and it's not already revoked
-    const existingSnapshot = await db
-      .ref(`userProducts/${targetDiscordId}/${productId}`)
-      .once('value')
-    const existingData = existingSnapshot.val()
+    // Verify the user product exists and is not already revoked
+    const snapshot = await db.ref(`userProducts/${userProductId}`).once('value');
 
-    if (!existingData) {
-      return NextResponse.json({ error: 'User does not own this product' }, { status: 404 })
+    if (!snapshot.exists()) {
+      return NextResponse.json(
+        { error: 'User product record not found.' },
+        { status: 404 }
+      );
     }
 
-    if (existingData.revoked) {
-      return NextResponse.json({ error: 'Product is already revoked' }, { status: 409 })
+    const existingData = snapshot.val() as Record<string, unknown>;
+
+    if (existingData.revokedAt !== null && existingData.revokedAt !== undefined) {
+      return NextResponse.json(
+        { error: 'Product has already been revoked.' },
+        { status: 400 }
+      );
     }
 
-    const now = Date.now()
+    const productName = (existingData.productName as string) || 'Unknown';
+    const targetUserId = (existingData.userId as string) || 'Unknown';
+    const targetProductId = (existingData.productId as string) || '';
 
-    // Update with revoked flag
-    await db.ref(`userProducts/${targetDiscordId}/${productId}`).update({
-      revoked: true,
-      revokedAt: now,
+    // Get product info for context
+    let productInfo = productName;
+    if (targetProductId) {
+      const productSnapshot = await db.ref(`products/${targetProductId}`).once('value');
+      if (productSnapshot.exists()) {
+        const product = parseProduct(targetProductId, productSnapshot.val() as Record<string, unknown>);
+        productInfo = product.name;
+      }
+    }
+
+    // Soft-revoke by setting revokedAt and revokedBy
+    await db.ref(`userProducts/${userProductId}`).update({
+      revokedAt: Date.now(),
       revokedBy: session.user.discordId,
-    })
+    });
 
-    // Fetch product name for audit log
-    let productName = 'Unknown'
-    const productSnapshot = await db.ref(`products/${productId}`).once('value')
-    const productData = productSnapshot.val()
-    if (productData) {
-      productName = productData.name
-    }
-
-    // Add audit log
-    const auditRef = db.ref('auditLogs').push()
+    // Create audit log
+    const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {
-      action: 'product_revoke',
-      actor: {
-        discordId: session.user.discordId,
-        username: session.user.name || 'Unknown',
-      },
-      target: {
-        discordId: targetDiscordId,
-        productId,
-      },
-      details: {
-        productName,
-        reason: reason || null,
-      },
-      timestamp: now,
-    }
-    await auditRef.set({ ...auditLog, id: auditRef.key! })
+      action: 'revoke',
+      performedBy: session.user.discordId,
+      performedByRole: session.user.role,
+      targetUserId,
+      targetProductId,
+      details: `Revoked product "${productInfo}" (${targetProductId}) from user ${targetUserId}. User product ID: ${userProductId}`,
+      createdAt: Date.now(),
+    };
+    await auditRef.set(auditLog);
 
     return NextResponse.json({
-      success: true,
-      revoked: {
-        discordId: targetDiscordId,
-        productId,
-        productName,
-      },
-    })
+      message: `Product "${productInfo}" has been revoked from user ${targetUserId}.`,
+      userProductId,
+    });
   } catch (error) {
-    console.error('Error revoking product:', error)
-    return NextResponse.json({ error: 'Failed to revoke product' }, { status: 500 })
+    console.error('[POST /api/admin/revoke] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to revoke product.' },
+      { status: 500 }
+    );
   }
 }

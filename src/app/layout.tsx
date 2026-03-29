@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/providers";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,17 +15,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DT Events - Premium Product Hub",
-  description: "DT Events delivers quality product manufacturing, custom commissions, and curated bi-weekly events. Browse, purchase, and download premium Roblox products.",
-  keywords: ["DT Events", "Roblox", "Products", "Events", "Commissions", "Manufacturing", "Flux Kit"],
-  authors: [{ name: "DT Events Team" }],
+  title: "DT Events - Premium Roblox Development",
+  description: "Professional Roblox development solutions — gamepasses, plugins, assets, and custom commissions.",
+  keywords: ["DT Events", "Roblox", "Gamepasses", "Plugins", "Development"],
+  authors: [{ name: "DT Events" }],
   icons: {
-    icon: "/logo.png",
+    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "DT Events - Product Hub",
-    description: "Premium Roblox Products",
+    title: "DT Events",
+    description: "Premium Roblox Development Solutions",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DT Events",
+    description: "Premium Roblox Development Solutions",
   },
 };
 

@@ -1,253 +1,179 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import { SlidersHorizontal, X, RotateCcw } from "lucide-react"
-import { type ProductFilters } from "@/types"
+} from '@/components/ui/select';
+import { Search, RotateCcw } from 'lucide-react';
+import type { ProductFilters, ProductTag, ProductType } from '@/types';
 
-interface ProductFiltersPanelProps {
-  filters: ProductFilters
-  onFiltersChange: (filters: ProductFilters) => void
+interface ProductFiltersProps {
+  onFilterChange: (filters: ProductFilters) => void;
 }
 
-const tagOptions = [
-  { id: "budget", label: "Budget" },
-  { id: "free", label: "Free" },
-  { id: "flux_kit_ready", label: "Flux Kit Ready" },
-  { id: "new", label: "New" },
-]
+const allTags: ProductTag[] = ['new', 'popular', 'limited', 'sale', 'featured', 'exclusive'];
+const allTypes: ProductType[] = ['gamepass', 'asset', 'plugin', 'tool', 'other'];
 
-const typeOptions = [
-  { value: "profile", label: "Profile" },
-  { value: "venue", label: "Venue" },
-  { value: "wash", label: "Wash" },
-  { value: "other", label: "Other" },
-]
+export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
+  const [search, setSearch] = useState('');
+  const [selectedTags, setSelectedTags] = useState<ProductTag[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<ProductType[]>([]);
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
 
-function getActiveFilterCount(filters: ProductFilters): number {
-  let count = 0
-  if (filters.tags.length > 0) count += filters.tags.length
-  if (filters.types.length > 0) count += filters.types.length
-  if (filters.priceMin !== null) count++
-  if (filters.priceMax !== null) count++
-  if (filters.boosterOnly) count++
-  return count
-}
+  const applyFilters = () => {
+    onFilterChange({
+      search: search || undefined,
+      tags: selectedTags.length > 0 ? selectedTags : undefined,
+      types: selectedTypes.length > 0 ? selectedTypes : undefined,
+      priceMin: priceMin ? parseFloat(priceMin) : undefined,
+      priceMax: priceMax ? parseFloat(priceMax) : undefined,
+    });
+  };
 
-function FilterContent({ filters, onFiltersChange }: ProductFiltersPanelProps) {
-  const handleTagToggle = (tagId: string) => {
-    const newTags = filters.tags.includes(tagId)
-      ? filters.tags.filter((t) => t !== tagId)
-      : [...filters.tags, tagId]
-    onFiltersChange({ ...filters, tags: newTags })
-  }
+  const resetFilters = () => {
+    setSearch('');
+    setSelectedTags([]);
+    setSelectedTypes([]);
+    setPriceMin('');
+    setPriceMax('');
+    onFilterChange({});
+  };
 
-  const handleTypeChange = (value: string) => {
-    const newTypes = filters.types.includes(value)
-      ? filters.types.filter((t) => t !== value)
-      : [...filters.types, value]
-    onFiltersChange({ ...filters, types: newTypes })
-  }
+  const toggleTag = (tag: ProductTag) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
 
-  const handleReset = () => {
-    onFiltersChange({
-      search: filters.search,
-      tags: [],
-      types: [],
-      priceMin: null,
-      priceMax: null,
-      boosterOnly: false,
-    })
-  }
-
-  const activeCount = getActiveFilterCount(filters)
+  const toggleType = (type: ProductType) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-lg">Filters</h3>
-          {activeCount > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {activeCount}
-            </Badge>
-          )}
+    <div className="space-y-6 p-4 border rounded-lg bg-background">
+      <h3 className="font-semibold text-sm">Filters</h3>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <Input
+          placeholder="Search products..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            applyFilters();
+          }}
+          className="pl-8"
+        />
+      </div>
+
+      {/* Tags */}
+      <div className="space-y-2">
+        <Label className="text-xs font-medium text-muted-foreground">Tags</Label>
+        <div className="flex flex-wrap gap-2">
+          {allTags.map((tag) => (
+            <label
+              key={tag}
+              className="flex items-center gap-1.5 cursor-pointer"
+            >
+              <Checkbox
+                checked={selectedTags.includes(tag)}
+                onCheckedChange={() => toggleTag(tag)}
+              />
+              <span className="text-xs capitalize">{tag}</span>
+            </label>
+          ))}
         </div>
-        {activeCount > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleReset}
-            className="text-xs h-8 hover:bg-foreground hover:text-background transition-colors duration-300"
-          >
-            <RotateCcw className="h-3 w-3 mr-1" />
-            Reset
-          </Button>
+      </div>
+
+      {/* Types */}
+      <div className="space-y-2">
+        <Label className="text-xs font-medium text-muted-foreground">Type</Label>
+        <Select
+          value={selectedTypes.length === 1 ? selectedTypes[0] : undefined}
+          onValueChange={(val) => {
+            const type = val as ProductType;
+            toggleType(type);
+            setTimeout(applyFilters, 0);
+          }}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="All types" />
+          </SelectTrigger>
+          <SelectContent>
+            {allTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {selectedTypes.length > 1 && (
+          <div className="flex flex-wrap gap-1">
+            {selectedTypes.map((type) => (
+              <button
+                key={type}
+                onClick={() => {
+                  toggleType(type);
+                  setTimeout(applyFilters, 0);
+                }}
+                className="text-[10px] px-2 py-0.5 border rounded-full hover:bg-foreground hover:text-background transition-colors"
+              >
+                {type} ×
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
-      <Separator />
-
-      {/* Tags */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">Tags</Label>
-        <div className="space-y-2">
-          {tagOptions.map((tag) => (
-            <label
-              key={tag.id}
-              className="flex items-center gap-3 cursor-pointer group"
-            >
-              <Checkbox
-                checked={filters.tags.includes(tag.id)}
-                onCheckedChange={() => handleTagToggle(tag.id)}
-              />
-              <span className="text-sm group-hover:text-foreground/80 transition-colors">
-                {tag.label}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Type */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">Type</Label>
-        <div className="space-y-2">
-          {typeOptions.map((type) => (
-            <label
-              key={type.value}
-              className="flex items-center gap-3 cursor-pointer group"
-            >
-              <Checkbox
-                checked={filters.types.includes(type.value)}
-                onCheckedChange={() => handleTypeChange(type.value)}
-              />
-              <span className="text-sm group-hover:text-foreground/80 transition-colors">
-                {type.label}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <Separator />
-
       {/* Price Range */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">Price Range (R$)</Label>
-        <div className="flex items-center gap-2">
+      <div className="space-y-2">
+        <Label className="text-xs font-medium text-muted-foreground">Price Range</Label>
+        <div className="flex gap-2 items-center">
           <Input
             type="number"
             placeholder="Min"
-            value={filters.priceMin ?? ""}
-            onChange={(e) =>
-              onFiltersChange({
-                ...filters,
-                priceMin: e.target.value ? Number(e.target.value) : null,
-              })
-            }
-            className="h-9"
+            value={priceMin}
+            onChange={(e) => setPriceMin(e.target.value)}
+            className="h-8 text-sm"
             min={0}
           />
-          <span className="text-muted-foreground">—</span>
+          <span className="text-muted-foreground text-xs">to</span>
           <Input
             type="number"
             placeholder="Max"
-            value={filters.priceMax ?? ""}
-            onChange={(e) =>
-              onFiltersChange({
-                ...filters,
-                priceMax: e.target.value ? Number(e.target.value) : null,
-              })
-            }
-            className="h-9"
+            value={priceMax}
+            onChange={(e) => setPriceMax(e.target.value)}
+            className="h-8 text-sm"
             min={0}
           />
         </div>
+        <Button size="sm" variant="outline" className="w-full mt-2" onClick={applyFilters}>
+          Apply Price
+        </Button>
       </div>
 
-      <Separator />
-
-      {/* Booster Only */}
-      <div className="flex items-center justify-between">
-        <Label htmlFor="booster-only" className="text-sm font-medium cursor-pointer">
-          Booster Only
-        </Label>
-        <Switch
-          id="booster-only"
-          checked={filters.boosterOnly}
-          onCheckedChange={(checked) =>
-            onFiltersChange({ ...filters, boosterOnly: !!checked })
-          }
-        />
-      </div>
+      {/* Reset */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-full hover:bg-foreground hover:text-background"
+        onClick={resetFilters}
+      >
+        <RotateCcw className="size-3 mr-1" />
+        Reset Filters
+      </Button>
     </div>
-  )
-}
-
-export function ProductFiltersPanel(props: ProductFiltersPanelProps) {
-  return (
-    <>
-      {/* Desktop: Sidebar */}
-      <aside className="hidden lg:block w-64 shrink-0">
-        <div className="sticky top-20 p-4 border border-border rounded-lg bg-card">
-          <ScrollArea className="max-h-[calc(100vh-8rem)]">
-            <FilterContent {...props} />
-          </ScrollArea>
-        </div>
-      </aside>
-
-      {/* Mobile: Sheet */}
-      <div className="lg:hidden">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 hover:bg-foreground hover:text-background transition-colors duration-300"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              Filters
-              {getActiveFilterCount(props.filters) > 0 && (
-                <Badge variant="secondary" className="text-xs ml-1">
-                  {getActiveFilterCount(props.filters)}
-                </Badge>
-              )}
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-80">
-            <SheetHeader>
-              <SheetTitle>Filters</SheetTitle>
-            </SheetHeader>
-            <div className="mt-6">
-              <FilterContent {...props} />
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-    </>
-  )
+  );
 }

@@ -1,294 +1,226 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { useQuery } from "@tanstack/react-query"
-import { motion } from "framer-motion"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
-import { useSession } from "next-auth/react"
-import { type Product } from "@/types"
-import { Loader2, Gift, Ban } from "lucide-react"
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Shield, Gift, Ban, Loader2, CheckCircle2 } from 'lucide-react';
 
-const mockProducts: Pick<Product, "id" | "name">[] = [
-  { id: "mock1", name: "Pioneer DJM V10 Mixer" },
-  { id: "mock2", name: "DT 240 Moving Head Beam" },
-  { id: "mock3", name: "Shure SLXD2/Nexadyne + SLXD4D" },
-  { id: "mock4", name: "Chauvet COLORado PXL Bar 8" },
-]
+interface ActionState {
+  loading: boolean;
+  success: string | null;
+  error: string | null;
+}
 
 export function AdminPanel() {
-  const { toast } = useToast()
-  const { data: session } = useSession()
+  const [grantState, setGrantState] = useState<ActionState>({
+    loading: false,
+    success: null,
+    error: null,
+  });
+  const [revokeState, setRevokeState] = useState<ActionState>({
+    loading: false,
+    success: null,
+    error: null,
+  });
 
-  const { data: products } = useQuery({
-    queryKey: ["products-list"],
-    queryFn: async () => {
-      try {
-        const res = await fetch("/api/products")
-        if (!res.ok) throw new Error("Failed to fetch")
-        return res.json()
-      } catch {
-        return mockProducts
+  const [grantUserId, setGrantUserId] = useState('');
+  const [grantProductId, setGrantProductId] = useState('');
+  const [revokeUserProductId, setRevokeUserProductId] = useState('');
+
+  const handleGrant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGrantState({ loading: true, success: null, error: null });
+
+    try {
+      const res = await fetch('/api/admin/grant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: grantUserId,
+          productId: grantProductId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to grant product');
       }
-    },
-  })
+
+      setGrantState({ loading: false, success: data.message, error: null });
+      setGrantUserId('');
+      setGrantProductId('');
+    } catch (err) {
+      setGrantState({
+        loading: false,
+        success: null,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      });
+    }
+  };
+
+  const handleRevoke = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRevokeState({ loading: true, success: null, error: null });
+
+    try {
+      const res = await fetch('/api/admin/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userProductId: revokeUserProductId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to revoke product');
+      }
+
+      setRevokeState({ loading: false, success: data.message, error: null });
+      setRevokeUserProductId('');
+    } catch (err) {
+      setRevokeState({
+        loading: false,
+        success: null,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      });
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Admin Panel</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Grant or revoke products from users
+    <div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          <Shield className="size-5" />
+          Admin Panel
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Manage product grants and revocations.
         </p>
       </div>
 
       <Tabs defaultValue="grant">
-        <TabsList className="bg-muted">
-          <TabsTrigger
-            value="grant"
-            className="data-[state=active]:bg-foreground data-[state=active]:text-background transition-colors"
-          >
-            <Gift className="h-4 w-4 mr-2" />
+        <TabsList>
+          <TabsTrigger value="grant">
+            <Gift className="size-3.5 mr-1" />
             Grant Product
           </TabsTrigger>
-          <TabsTrigger
-            value="revoke"
-            className="data-[state=active]:bg-foreground data-[state=active]:text-background transition-colors"
-          >
-            <Ban className="h-4 w-4 mr-2" />
+          <TabsTrigger value="revoke">
+            <Ban className="size-3.5 mr-1" />
             Revoke Product
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="grant">
-          <GrantProductForm products={products ?? mockProducts} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Grant a Product</CardTitle>
+              <CardDescription>
+                Give a product to a user by their Roblox User ID.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleGrant} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="grant-user-id">User Roblox ID</Label>
+                  <Input
+                    id="grant-user-id"
+                    placeholder="Enter Roblox User ID"
+                    value={grantUserId}
+                    onChange={(e) => setGrantUserId(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="grant-product-id">Product ID</Label>
+                  <Input
+                    id="grant-product-id"
+                    placeholder="Enter Product ID"
+                    value={grantProductId}
+                    onChange={(e) => setGrantProductId(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {grantState.error && (
+                  <p className="text-sm text-destructive">{grantState.error}</p>
+                )}
+                {grantState.success && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <CheckCircle2 className="size-4" />
+                    {grantState.success}
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={grantState.loading || !grantUserId || !grantProductId}
+                  className="hover:bg-foreground/90"
+                >
+                  {grantState.loading && <Loader2 className="size-4 animate-spin" />}
+                  {grantState.loading ? 'Granting...' : 'Grant Product'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </TabsContent>
+
         <TabsContent value="revoke">
-          <RevokeProductForm products={products ?? mockProducts} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Revoke a Product</CardTitle>
+              <CardDescription>
+                Revoke a user&apos;s product access by the User Product ID.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleRevoke} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="revoke-user-product-id">User Product ID</Label>
+                  <Input
+                    id="revoke-user-product-id"
+                    placeholder="Enter User Product ID"
+                    value={revokeUserProductId}
+                    onChange={(e) => setRevokeUserProductId(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {revokeState.error && (
+                  <p className="text-sm text-destructive">{revokeState.error}</p>
+                )}
+                {revokeState.success && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <CheckCircle2 className="size-4" />
+                    {revokeState.success}
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  disabled={revokeState.loading || !revokeUserProductId}
+                >
+                  {revokeState.loading && <Loader2 className="size-4 animate-spin" />}
+                  {revokeState.loading ? 'Revoking...' : 'Revoke Product'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
-  )
-}
-
-function GrantProductForm({ products }: { products: Pick<Product, "id" | "name">[] }) {
-  const { toast } = useToast()
-  const [discordId, setDiscordId] = React.useState("")
-  const [productId, setProductId] = React.useState("")
-  const [reason, setReason] = React.useState("")
-  const [isLoading, setIsLoading] = React.useState(false)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!discordId || !productId) {
-      toast({ title: "Missing fields", description: "Please fill in all required fields." })
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      const res = await fetch("/api/admin/grant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetDiscordId: discordId, productId, reason: reason || undefined }),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error ?? "Failed to grant product")
-      }
-      toast({
-        title: "Product granted",
-        description: `Product has been successfully granted to the user.`,
-      })
-      setDiscordId("")
-      setProductId("")
-      setReason("")
-    } catch (err: any) {
-      toast({
-        title: "Failed to grant product",
-        description: err.message ?? "An unexpected error occurred.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Grant Product to User</CardTitle>
-        <CardDescription>
-          Give a product to a user. They will receive access immediately.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="grant-discord-id">Discord User ID *</Label>
-            <Input
-              id="grant-discord-id"
-              placeholder="Enter the user's Discord ID"
-              value={discordId}
-              onChange={(e) => setDiscordId(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="grant-product-id">Product *</Label>
-            <Select value={productId} onValueChange={setProductId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a product" />
-              </SelectTrigger>
-              <SelectContent>
-                {products.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} ({p.id})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="grant-reason">Reason (optional)</Label>
-            <Textarea
-              id="grant-reason"
-              placeholder="Why is this being granted?"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              rows={3}
-            />
-          </div>
-
-          <Button type="submit" disabled={isLoading} className="w-full gap-2">
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Gift className="h-4 w-4" />
-            )}
-            Grant Product
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  )
-}
-
-function RevokeProductForm({ products }: { products: Pick<Product, "id" | "name">[] }) {
-  const { toast } = useToast()
-  const [discordId, setDiscordId] = React.useState("")
-  const [productId, setProductId] = React.useState("")
-  const [reason, setReason] = React.useState("")
-  const [isLoading, setIsLoading] = React.useState(false)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!discordId || !productId) {
-      toast({ title: "Missing fields", description: "Please fill in all required fields." })
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      const res = await fetch("/api/admin/revoke", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetDiscordId: discordId, productId, reason: reason || undefined }),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error ?? "Failed to revoke product")
-      }
-      toast({
-        title: "Product revoked",
-        description: `Product has been successfully revoked from the user.`,
-      })
-      setDiscordId("")
-      setProductId("")
-      setReason("")
-    } catch (err: any) {
-      toast({
-        title: "Failed to revoke product",
-        description: err.message ?? "An unexpected error occurred.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Revoke Product from User</CardTitle>
-        <CardDescription>
-          Remove a product from a user. They will lose access immediately.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="revoke-discord-id">Discord User ID *</Label>
-            <Input
-              id="revoke-discord-id"
-              placeholder="Enter the user's Discord ID"
-              value={discordId}
-              onChange={(e) => setDiscordId(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="revoke-product-id">Product *</Label>
-            <Select value={productId} onValueChange={setProductId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a product" />
-              </SelectTrigger>
-              <SelectContent>
-                {products.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} ({p.id})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="revoke-reason">Reason (optional)</Label>
-            <Textarea
-              id="revoke-reason"
-              placeholder="Why is this being revoked?"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              rows={3}
-            />
-          </div>
-
-          <Button type="submit" disabled={isLoading} variant="outline" className="w-full gap-2 hover:bg-foreground hover:text-background transition-colors">
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Ban className="h-4 w-4" />
-            )}
-            Revoke Product
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  )
+  );
 }

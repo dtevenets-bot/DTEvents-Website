@@ -1,92 +1,113 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/firebase'
-import type { TempCart, CartItem } from '@/types'
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/firebase';
+import type { CartItem, TempCart } from '@/types';
 
-// POST /api/cart - Save cart to Firebase (auth required)
-export async function POST(request: NextRequest) {
+// ============================================================
+// POST /api/cart - Save cart to Firebase
+// ============================================================
+
+export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.robloxUserId) {
+      return NextResponse.json(
+        { error: 'Authentication required with linked Roblox account.' },
+        { status: 401 }
+      );
     }
 
-    const body = await request.json()
-    const { products, robloxUserId } = body as {
-      products: CartItem[]
-      robloxUserId: string
+    const body = await req.json();
+    const { items } = body as { items: CartItem[] };
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json(
+        { error: 'Cart items are required.' },
+        { status: 400 }
+      );
     }
 
-    if (!robloxUserId) {
-      return NextResponse.json({ error: 'Roblox user ID is required' }, { status: 400 })
-    }
-
-    if (!products || !Array.isArray(products) || products.length === 0) {
-      return NextResponse.json({ error: 'Cart must contain at least one product' }, { status: 400 })
-    }
-
-    const now = Date.now()
-    const cart: TempCart = {
-      robloxUserId,
-      discordId: session.user.discordId,
-      products,
-      createdAt: now,
-      expiresAt: now + 24 * 60 * 60 * 1000, // 24 hours from now
-    }
-
-    await db.ref(`tempCarts/${robloxUserId}`).set(cart)
-
-    return NextResponse.json({ success: true, expiresAt: cart.expiresAt })
-  } catch (error) {
-    console.error('Error saving cart:', error)
-    return NextResponse.json({ error: 'Failed to save cart' }, { status: 500 })
-  }
-}
-
-// GET /api/cart - Fetch user's current cart (auth required)
-export async function GET() {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Try to get robloxUserId from session first
-    let robloxUserId = session.user.robloxUserId
-
-    // If not in session, look up from userLinks
-    if (!robloxUserId) {
-      const linkSnapshot = await db.ref(`userLinks/${session.user.discordId}`).once('value')
-      const linkData = linkSnapshot.val()
-      if (linkData) {
-        robloxUserId = linkData.robloxUserId as string
+    // Validate cart items
+    for (const item of items) {
+      if (!item.productId || typeof item.price !== 'number' || typeof item.quantity !== 'number') {
+        return NextResponse.json(
+          { error: 'Invalid cart item format.' },
+          { status: 400 }
+        );
       }
     }
 
-    if (!robloxUserId) {
-      return NextResponse.json({ cart: null, error: 'No linked Roblox account found' })
+    const now = Date.now();
+    const tempCart: TempCart = {
+      robloxUserId: session.user.robloxUserId,
+      items,
+      createdAt: now,
+      expiresAt: now + 24 * 60 * 60 * 1000, // 24 hours
+    };
+
+    await db
+      .ref(`tempCarts/${session.user.robloxUserId}`)
+      .set(tempCart);
+
+    return NextResponse.json({
+      message: 'Cart saved successfully.',
+      expiresAt: tempCart.expiresAt,
+    });
+  } catch (error) {
+    console.error('[POST /api/cart] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to save cart.' },
+      { status: 500 }
+    );
+  }
+}
+
+// ============================================================
+// GET /api/cart - Fetch user's cart
+// ============================================================
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.robloxUserId) {
+      return NextResponse.json(
+        { error: 'Authentication required with linked Roblox account.' },
+        { status: 401 }
+      );
     }
 
-    const snapshot = await db.ref(`tempCarts/${robloxUserId}`).once('value')
-    const data = snapshot.val()
+    const snapshot = await db
+      .ref(`tempCarts/${session.user.robloxUserId}`)
+      .once('value');
 
-    if (!data) {
-      return NextResponse.json({ cart: null })
+    if (!snapshot.exists()) {
+      return NextResponse.json({ items: [] });
     }
 
-    const cart = data as TempCart
+    const cart = snapshot.val() as TempCart;
 
-    // Check if cart is expired
+    // Check if cart has expired
     if (Date.now() > cart.expiresAt) {
       // Clean up expired cart
-      await db.ref(`tempCarts/${robloxUserId}`).remove()
-      return NextResponse.json({ cart: null })
+      await db
+        .ref(`tempCarts/${session.user.robloxUserId}`)
+        .remove();
+      return NextResponse.json({ items: [] });
     }
 
-    return NextResponse.json({ cart })
+    return NextResponse.json({
+      items: cart.items,
+      createdAt: cart.createdAt,
+      expiresAt: cart.expiresAt,
+    });
   } catch (error) {
-    console.error('Error fetching cart:', error)
-    return NextResponse.json({ error: 'Failed to fetch cart' }, { status: 500 })
+    console.error('[GET /api/cart] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch cart.' },
+      { status: 500 }
+    );
   }
 }

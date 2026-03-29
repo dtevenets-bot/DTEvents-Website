@@ -1,214 +1,157 @@
-"use client"
+'use client';
 
-import * as React from "react"
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { ExternalLink, Check, AlertCircle, Loader2, ShoppingBag } from "lucide-react"
-import { useCartStore } from "@/stores/cart-store"
-import { useSession } from "next-auth/react"
-import { useToast } from "@/hooks/use-toast"
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Loader2, ShoppingCart, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { useCartStore } from '@/stores/cart-store';
 
-interface CheckoutModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
+export function CheckoutModal() {
+  const [open, setOpen] = useState(false);
+  const [robloxUserId, setRobloxUserId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const { data: session } = useSession();
+  const items = useCartStore((s) => s.items);
+  const totalPrice = useCartStore((s) => s.totalPrice());
+  const clearCart = useCartStore((s) => s.clearCart);
 
-type CheckoutStep = "summary" | "processing" | "success" | "error"
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener('open-checkout', handler);
+    return () => window.removeEventListener('open-checkout', handler);
+  }, []);
 
-export function CheckoutModal({ open, onOpenChange }: CheckoutModalProps) {
-  const { data: session } = useSession()
-  const { items, totalPrice, clearCart } = useCartStore()
-  const { toast } = useToast()
-  const [step, setStep] = React.useState<CheckoutStep>("summary")
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
-
-  const total = totalPrice()
-  const robloxUserId = (session?.user as any)?.robloxUserId
-
-  React.useEffect(() => {
-    if (open) {
-      setStep("summary")
-      setErrorMessage(null)
+  useEffect(() => {
+    if (session?.user?.robloxUserId) {
+      setRobloxUserId(session.user.robloxUserId);
     }
-  }, [open])
+  }, [session]);
 
-  const handleCheckout = async () => {
-    if (!robloxUserId) return
+  const handleClose = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setSuccess(false);
+    }
+  };
 
-    setStep("processing")
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!robloxUserId || items.length === 0) return;
 
+    setLoading(true);
     try {
-      const res = await fetch("/api/cart", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          robloxUserId,
-          discordId: (session?.user as any)?.discordId ?? "",
-          products: items,
-        }),
-      })
+      const res = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items }),
+      });
 
       if (!res.ok) {
-        throw new Error("Failed to save cart")
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to save cart');
       }
 
-      setStep("success")
-      clearCart()
-
-      // Open Roblox Hub in new tab after a short delay
-      setTimeout(() => {
-        window.open(
-          "https://www.roblox.com/games/92326562289312/DT-Events-Hub",
-          "_blank"
-        )
-      }, 1000)
-    } catch {
-      setStep("error")
-      setErrorMessage("Something went wrong. Please try again.")
+      setSuccess(true);
+      clearCart();
+    } catch (err) {
+      console.error('Checkout error:', err);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] p-0 overflow-hidden">
-        <ScrollArea className="max-h-[90vh]">
-          <div className="p-6">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">Checkout</DialogTitle>
-              <DialogDescription>
-                Review your order before completing the purchase.
-              </DialogDescription>
-            </DialogHeader>
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Checkout</DialogTitle>
+          <DialogDescription>
+            {success
+              ? 'Your cart has been saved. Complete the purchase in-game.'
+              : 'Review your cart and enter your Roblox User ID.'}
+          </DialogDescription>
+        </DialogHeader>
 
-            {/* Summary Step */}
-            {step === "summary" && (
-              <div className="mt-6 space-y-4">
-                {/* Roblox ID */}
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <span className="text-sm text-muted-foreground">Roblox ID</span>
-                  {robloxUserId ? (
-                    <span className="text-sm font-mono font-medium">{robloxUserId}</span>
-                  ) : (
-                    <span className="text-sm text-destructive">Not linked</span>
-                  )}
-                </div>
-
-                <Separator />
-
-                {/* Cart Items */}
-                <div className="space-y-2">
-                  {items.map((item) => (
-                    <div key={item.productId} className="flex items-center justify-between text-sm">
-                      <span className="truncate flex-1 mr-4">{item.productName}</span>
-                      <span className="text-muted-foreground shrink-0">
-                        x{item.quantity} — {item.productPrice * item.quantity === 0 ? "Free" : `${item.productPrice * item.quantity}R$`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <Separator />
-
-                {/* Total */}
-                <div className="flex items-center justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span>{total === 0 ? "Free" : `${total}R$`}</span>
-                </div>
-
-                {/* Actions */}
-                <div className="space-y-2 pt-2">
-                  <Button
-                    onClick={handleCheckout}
-                    className="w-full h-12 gap-2 font-semibold"
-                    disabled={!robloxUserId}
-                  >
-                    <ShoppingBag className="h-5 w-5" />
-                    Purchase on Roblox
-                  </Button>
-                  {!robloxUserId && (
-                    <p className="text-xs text-destructive text-center">
-                      Please link your Roblox account before checking out.
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Processing Step */}
-            {step === "processing" && (
-              <div className="mt-12 flex flex-col items-center justify-center text-center">
-                <Loader2 className="h-12 w-12 animate-spin mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Processing your order...</h3>
-                <p className="text-sm text-muted-foreground">
-                  Please wait while we prepare your purchase.
-                </p>
-              </div>
-            )}
-
-            {/* Success Step */}
-            {step === "success" && (
-              <div className="mt-12 flex flex-col items-center justify-center text-center">
-                <div className="h-16 w-16 rounded-full bg-foreground/10 flex items-center justify-center mb-4">
-                  <Check className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">Order Confirmed!</h3>
-                <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-                  Your cart has been saved. You&apos;ll be redirected to the Roblox Hub to complete your purchase.
-                  The Roblox Hub should open in a new tab automatically.
-                </p>
-                <Button
-                  asChild
-                  className="gap-2"
-                >
-                  <a
-                    href="https://www.roblox.com/games/92326562289312/DT-Events-Hub"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Open Roblox Hub
-                  </a>
-                </Button>
-              </div>
-            )}
-
-            {/* Error Step */}
-            {step === "error" && (
-              <div className="mt-12 flex flex-col items-center justify-center text-center">
-                <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-                  <AlertCircle className="h-8 w-8 text-destructive" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">Something went wrong</h3>
-                <p className="text-sm text-muted-foreground mb-6">
-                  {errorMessage ?? "An unexpected error occurred. Please try again."}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setStep("summary")
-                      setErrorMessage(null)
-                    }}
-                  >
-                    Go Back
-                  </Button>
-                  <Button onClick={handleCheckout}>
-                    Try Again
-                  </Button>
-                </div>
-              </div>
-            )}
+        {success ? (
+          <div className="flex flex-col items-center gap-4 py-6">
+            <CheckCircle2 className="size-16 text-green-500" />
+            <p className="text-sm text-center">
+              Cart saved successfully! Open the Roblox hub to complete your purchase.
+            </p>
+            <Button
+              className="hover:bg-foreground/90"
+              asChild
+            >
+              <a
+                href="https://www.roblox.com/games/start?placeId=PLACEHOLDER"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="size-4 mr-2" />
+                Open Roblox Hub
+              </a>
+            </Button>
           </div>
-        </ScrollArea>
+        ) : (
+          <>
+            {/* Cart Summary */}
+            <ScrollArea className="max-h-48 -mx-6 px-6">
+              <div className="space-y-3 py-2">
+                {items.map((item) => (
+                  <div key={item.productId} className="flex items-center justify-between text-sm">
+                    <span className="truncate flex-1">{item.productName}</span>
+                    <span className="font-medium ml-2">R${item.price * item.quantity}</span>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Total</span>
+              <span className="text-xl font-bold">R${totalPrice}</span>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="robloxUserId">Roblox User ID</Label>
+                <Input
+                  id="robloxUserId"
+                  placeholder="Enter your Roblox User ID"
+                  value={robloxUserId}
+                  onChange={(e) => setRobloxUserId(e.target.value)}
+                  required
+                />
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={loading || !robloxUserId || items.length === 0}
+                >
+                  {loading && <Loader2 className="size-4 animate-spin" />}
+                  {loading ? 'Processing...' : 'Save Cart & Continue'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </>
+        )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,163 +1,146 @@
-"use client"
+'use client';
 
-import * as React from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { ShoppingCart, Check, Crown, Sparkles, Tag, Zap } from "lucide-react"
-import { type Product } from "@/types"
-import { useCartStore } from "@/stores/cart-store"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ShoppingCart, ArrowLeft, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { useCartStore } from '@/stores/cart-store';
+import type { Product } from '@/types';
 
 interface ProductDetailModalProps {
-  product: Product | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  owned?: boolean
+  product: Product | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-const tagBadgeMap: Record<string, { icon: React.ElementType; label: string }> = {
-  new: { icon: Sparkles, label: "NEW" },
-  budget: { icon: Tag, label: "BUDGET" },
-  free: { icon: Tag, label: "FREE" },
-  flux_kit_ready: { icon: Zap, label: "FLUX KIT READY" },
-}
+export function ProductDetailModal({
+  product,
+  open,
+  onOpenChange,
+}: ProductDetailModalProps) {
+  const [showBack, setShowBack] = useState(false);
+  const addItem = useCartStore((s) => s.addItem);
 
-export function ProductDetailModal({ product, open, onOpenChange, owned = false }: ProductDetailModalProps) {
-  const [showBack, setShowBack] = React.useState(false)
-  const addItem = useCartStore((s) => s.addItem)
-  const { toast } = useToast()
+  if (!product) return null;
 
-  React.useEffect(() => {
-    if (open) setShowBack(false)
-  }, [open])
-
-  if (!product) return null
-
-  const tagBadges = product.tags.map((tag) => tagBadgeMap[tag]).filter(Boolean)
+  const currentImage = showBack
+    ? product.images?.back || ''
+    : product.images?.front || '';
 
   const handleAddToCart = () => {
-    addItem(product)
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    })
-    onOpenChange(false)
-  }
+    addItem({
+      productId: product.id,
+      productName: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.images?.front || '',
+    });
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0 overflow-hidden">
-        <ScrollArea className="max-h-[90vh]">
-          <div className="p-6">
-            <DialogHeader className="mb-4">
-              <div className="flex flex-wrap gap-2 mb-2">
-                {tagBadges.map((badge) => (
-                  <Badge
-                    key={badge.label}
-                    variant="outline"
-                    className="gap-1 text-xs font-semibold"
-                  >
-                    <badge.icon className="h-3 w-3" />
-                    {badge.label}
-                  </Badge>
-                ))}
-                {product.boosterExclusive && (
-                  <Badge className="gap-1 text-xs font-semibold">
-                    <Crown className="h-3 w-3" />
-                    Booster Exclusive
-                  </Badge>
-                )}
-              </div>
-              <DialogTitle className="text-2xl font-bold">{product.name}</DialogTitle>
-              <DialogDescription className="text-base">
-                Made by {product.maker}
-              </DialogDescription>
-            </DialogHeader>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{product.name}</DialogTitle>
+          <DialogDescription className="line-clamp-2">
+            {product.description || 'No description available.'}
+          </DialogDescription>
+        </DialogHeader>
 
-            {/* Image */}
-            <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted mb-6">
-              <img
-                src={showBack && product.images.back ? product.images.back : product.images.front}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-              {product.images.back && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="absolute bottom-3 right-3 bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
-                  onClick={() => setShowBack(!showBack)}
-                >
-                  {showBack ? "Front View" : "Back View"}
-                </Button>
-              )}
+        {/* Image Viewer */}
+        <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
+          {currentImage ? (
+            <img
+              src={currentImage}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+              No image available
             </div>
+          )}
 
-            {/* Details */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold">
-                  {product.price === 0 ? "Free" : `${product.price}R$`}
-                </span>
-                <Badge variant="outline" className="text-xs">
-                  Type: {product.type.charAt(0).toUpperCase() + product.type.slice(1)}
-                </Badge>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h4 className="font-semibold mb-2">Description</h4>
-                <p className="text-muted-foreground leading-relaxed">
-                  {product.description}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Product ID</span>
-                  <p className="font-mono text-xs mt-1">{product.id}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Maker</span>
-                  <p className="mt-1">{product.maker}</p>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Action Button */}
-              {owned ? (
-                <Button
-                  disabled
-                  className="w-full h-12 gap-2"
-                  variant="outline"
-                >
-                  <Check className="h-5 w-5" />
-                  Already Owned
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleAddToCart}
-                  className="w-full h-12 gap-2 font-semibold"
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  Add to Cart — {product.price === 0 ? "Free" : `${product.price}R$`}
-                </Button>
-              )}
+          {/* Front/Back toggle */}
+          {product.images?.front && product.images?.back && (
+            <div className="absolute bottom-2 right-2 flex gap-1">
+              <Button
+                variant="secondary"
+                size="sm"
+                className={`text-xs h-7 ${!showBack ? 'bg-foreground text-background' : ''}`}
+                onClick={() => setShowBack(false)}
+              >
+                Front
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className={`text-xs h-7 ${showBack ? 'bg-foreground text-background' : ''}`}
+                onClick={() => setShowBack(true)}
+              >
+                Back
+              </Button>
             </div>
+          )}
+
+          {/* Arrow nav */}
+          {product.images?.front && product.images?.back && (
+            <>
+              <button
+                className="absolute left-2 top-1/2 -translate-y-1/2 size-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                onClick={() => setShowBack((prev) => !prev)}
+              >
+                <ArrowLeft className="size-4" />
+              </button>
+              <button
+                className="absolute right-2 top-1/2 -translate-y-1/2 size-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                onClick={() => setShowBack((prev) => !prev)}
+              >
+                <ArrowRight className="size-4" />
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-2xl font-bold">R${product.price}</span>
+            {product.maker && (
+              <span className="text-sm text-muted-foreground">by {product.maker}</span>
+            )}
           </div>
-        </ScrollArea>
+
+          {product.tags && product.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {product.tags.map((tag) => (
+                <Badge key={tag} variant="outline">
+                  {tag}
+                </Badge>
+              ))}
+              {product.boosterExclusive && (
+                <Badge>Booster Exclusive</Badge>
+              )}
+            </div>
+          )}
+
+          <Button
+            className="w-full hover:bg-foreground/90"
+            onClick={handleAddToCart}
+          >
+            <ShoppingCart className="size-4 mr-2" />
+            Add to Cart
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

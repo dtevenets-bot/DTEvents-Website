@@ -1,40 +1,36 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { useSession, signIn, signOut } from "next-auth/react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useAuthStore, hasRole, isBooster, isAdmin, isOwner } from "@/stores/auth-store"
-import { useCartStore } from "@/stores/cart-store"
-import { type UserSession, type Product, type UserRole } from "@/types"
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuthStore } from '@/stores/auth-store';
+import { LoginModal } from '@/components/auth/login-modal';
+import { NavigationHeader } from '@/components/landing/navigation-header';
+import { HeroSection } from '@/components/landing/hero-section';
+import { ServicesSection } from '@/components/landing/services-section';
+import { ProductsPreview } from '@/components/landing/products-preview';
+import { CommissionsSection } from '@/components/landing/commissions-section';
+import { Footer } from '@/components/landing/footer';
+import { HubNavigation, type HubTab } from '@/components/hub/hub-navigation';
+import { ProductGrid } from '@/components/hub/product-grid';
+import { MyProductsView } from '@/components/hub/my-products-view';
+import { BoosterZone } from '@/components/hub/booster-zone';
+import { AdminPanel } from '@/components/hub/admin-panel';
+import { OwnerPanel } from '@/components/hub/owner-panel';
+import { CartSidebar } from '@/components/hub/cart-sidebar';
+import { CheckoutModal } from '@/components/hub/checkout-modal';
 
-// Landing page components
-import { NavigationHeader } from "@/components/landing/navigation-header"
-import { HeroSection } from "@/components/landing/hero-section"
-import { ServicesSection } from "@/components/landing/services-section"
-import { ProductsPreview } from "@/components/landing/products-preview"
-import { CommissionsSection } from "@/components/landing/commissions-section"
-import { LandingFooter } from "@/components/landing/footer"
-
-// Auth components
-import { LoginModal } from "@/components/auth/login-modal"
-import { UserMenu } from "@/components/auth/user-menu"
-
-// Hub components
-import { HubNavigation, type HubTab } from "@/components/hub/hub-navigation"
-import { ProductGrid } from "@/components/hub/product-grid"
-import { ProductDetailModal } from "@/components/hub/product-detail-modal"
-import { CartSidebar } from "@/components/hub/cart-sidebar"
-import { CheckoutModal } from "@/components/hub/checkout-modal"
-import { MyProductsView } from "@/components/hub/my-products-view"
-import { BoosterZone } from "@/components/hub/booster-zone"
-import { AdminPanel } from "@/components/hub/admin-panel"
-import { OwnerPanel } from "@/components/hub/owner-panel"
-
-function LoadingScreen() {
+function LoadingSkeleton() {
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="h-16 border-b border-border" />
+      <div className="h-14 border-b flex items-center justify-between px-4">
+        <Skeleton className="h-8 w-32" />
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <Skeleton className="h-8 w-20" />
+        </div>
+      </div>
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-4">
           <Skeleton className="h-12 w-12 rounded-full mx-auto" />
@@ -43,91 +39,30 @@ function LoadingScreen() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function LandingView() {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
+    <div className="min-h-screen flex flex-col">
       <NavigationHeader />
       <HeroSection />
       <ServicesSection />
       <ProductsPreview />
       <CommissionsSection />
-      <LandingFooter />
+      <Footer />
       <LoginModal />
-    </motion.div>
-  )
+    </div>
+  );
 }
 
 function HubView() {
-  const user = useAuthStore((s) => s.user)
-  const role = user?.role
-  const cartItems = useCartStore((s) => s.items)
-  const [activeTab, setActiveTab] = React.useState<HubTab>("products")
-  const [cartOpen, setCartOpen] = React.useState(false)
-  const [checkoutOpen, setCheckoutOpen] = React.useState(false)
-  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null)
-  const [detailOpen, setDetailOpen] = React.useState(false)
-
-  // Listen for hub navigation events from UserMenu
-  React.useEffect(() => {
-    const handler = (e: Event) => {
-      const customEvent = e as CustomEvent<string>
-      const tab = customEvent.detail as HubTab
-      if (tab) setActiveTab(tab)
-    }
-    window.addEventListener("hub-navigate", handler)
-    return () => window.removeEventListener("hub-navigate", handler)
-  }, [])
-
-  // Reset tab if role doesn't support it
-  React.useEffect(() => {
-    if (activeTab === "booster" && !isBooster(role)) setActiveTab("products")
-    if (activeTab === "admin" && !isAdmin(role)) setActiveTab("products")
-    if (activeTab === "manage" && !isOwner(role)) setActiveTab("products")
-  }, [role, activeTab])
-
-  const handleProductClick = (product: Product) => {
-    setSelectedProduct(product)
-    setDetailOpen(true)
-  }
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case "products":
-        return <ProductGrid onProductClick={handleProductClick} />
-      case "my-products":
-        return <MyProductsView />
-      case "booster":
-        return <BoosterZone onProductClick={handleProductClick} />
-      case "admin":
-        return <AdminPanel />
-      case "manage":
-        return <OwnerPanel />
-      default:
-        return <ProductGrid onProductClick={handleProductClick} />
-    }
-  }
+  const [activeTab, setActiveTab] = useState<HubTab>('products');
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="min-h-screen flex flex-col"
-    >
-      <HubNavigation
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onCartOpen={() => setCartOpen(true)}
-      />
-
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen flex flex-col">
+      <HubNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <main className="flex-1 container mx-auto px-4 py-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -136,73 +71,51 @@ function HubView() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {renderTabContent()}
+            {activeTab === 'products' && <ProductGrid />}
+            {activeTab === 'my-products' && <MyProductsView />}
+            {activeTab === 'booster' && <BoosterZone />}
+            {activeTab === 'admin' && <AdminPanel />}
+            {activeTab === 'manage' && <OwnerPanel />}
           </motion.div>
         </AnimatePresence>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-border py-6 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-xs text-muted-foreground text-center">
-            © 2026 DT Events. All Rights Reserved.
-          </p>
-        </div>
-      </footer>
-
-      {/* Modals & Sidebars */}
-      <ProductDetailModal
-        product={selectedProduct}
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
-      />
-      <CartSidebar
-        open={cartOpen}
-        onOpenChange={setCartOpen}
-        onCheckout={() => {
-          setCartOpen(false)
-          setCheckoutOpen(true)
-        }}
-      />
-      <CheckoutModal open={checkoutOpen} onOpenChange={setCheckoutOpen} />
-    </motion.div>
-  )
+      <CartSidebar />
+      <CheckoutModal />
+      <LoginModal />
+    </div>
+  );
 }
 
 export default function Home() {
-  const { data: session, status } = useSession()
-  const { setAuth, logout } = useAuthStore()
+  const { data: session, status } = useSession();
+  const { setAuth, setLoading, logout } = useAuthStore();
 
-  // Sync session to auth store
-  React.useEffect(() => {
-    if (status === "authenticated" && session?.user) {
-      const userData = session.user as any
-      const userSession: UserSession = {
-        discordUser: {
-          id: userData.discordId ?? userData.id ?? "",
-          username: userData.username ?? userData.name ?? "User",
-          avatar: userData.avatar ?? userData.image ?? null,
-          discriminator: userData.discriminator ?? "0",
-        },
-        role: (userData.role ?? "user") as UserRole,
-        robloxUserId: userData.robloxUserId ?? null,
-      }
-      setAuth(userSession)
-    } else if (status === "unauthenticated") {
-      logout()
+  // Sync session to auth-store
+  useEffect(() => {
+    if (status === 'loading') {
+      setLoading(true);
+      return;
     }
-  }, [session, status, setAuth, logout])
 
-  // Show loading while session is being fetched
-  if (status === "loading") {
-    return <LoadingScreen />
+    if (session?.user) {
+      setAuth({
+        id: session.user.id,
+        discordId: session.user.discordId,
+        username: session.user.username,
+        avatar: session.user.avatar,
+        role: session.user.role,
+        robloxUserId: session.user.robloxUserId,
+      });
+    } else {
+      logout();
+    }
+  }, [session, status, setAuth, setLoading, logout]);
+
+  if (status === 'loading') {
+    return <LoadingSkeleton />;
   }
 
-  // Not authenticated → Landing page
-  if (status === "unauthenticated") {
-    return <LandingView />
-  }
-
-  // Authenticated → Product Hub
-  return <HubView />
+  return session?.user ? <HubView /> : <LandingView />;
 }
+
+

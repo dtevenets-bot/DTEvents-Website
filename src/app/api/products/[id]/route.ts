@@ -1,181 +1,182 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { db, parseProduct } from '@/lib/firebase'
-import type { AuditLog } from '@/types'
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/firebase';
+import { parseProduct } from '@/lib/firebase';
+import type { AuditLog } from '@/types';
 
-// GET /api/products/[id] - Fetch a single product (public)
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+// ============================================================
+// GET /api/products/[id] - Get a single product
+// ============================================================
+
+export async function GET(_req: NextRequest, { params }: RouteParams) {
   try {
-    const { id } = await params
+    const { id } = await params;
 
-    const snapshot = await db.ref(`products/${id}`).once('value')
-    const data = snapshot.val()
+    const snapshot = await db.ref(`products/${id}`).once('value');
 
-    if (!data) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    if (!snapshot.exists()) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
     }
 
-    const product = parseProduct(data as Record<string, unknown>)
+    const product = parseProduct(id, snapshot.val() as Record<string, unknown>);
 
-    // For booster exclusive products, check access
-    if (product.boosterExclusive) {
-      const session = await getServerSession(authOptions)
-      const isBooster =
-        session?.user?.role === 'booster' ||
-        session?.user?.role === 'admin' ||
-        session?.user?.role === 'owner'
-      if (!isBooster) {
-        return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-      }
-    }
-
-    return NextResponse.json(product)
+    return NextResponse.json(product);
   } catch (error) {
-    console.error('Error fetching product:', error)
-    return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
+    console.error(`[GET /api/products/${id}] Error:`, error);
+    return NextResponse.json(
+      { error: 'Failed to fetch product' },
+      { status: 500 }
+    );
   }
 }
 
+// ============================================================
 // PUT /api/products/[id] - Update a product (owner only)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// ============================================================
+
+export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== 'owner') {
+      return NextResponse.json(
+        { error: 'Unauthorized. Owner access required.' },
+        { status: 403 }
+      );
     }
 
-    const role = session.user.role as string
-    if (role !== 'owner') {
-      return NextResponse.json({ error: 'Forbidden: Owner access required' }, { status: 403 })
-    }
-
-    const { id } = await params
+    const { id } = await params;
 
     // Check product exists
-    const existingSnapshot = await db.ref(`products/${id}`).once('value')
-    const existingData = existingSnapshot.val()
-    if (!existingData) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    const existingSnapshot = await db.ref(`products/${id}`).once('value');
+    if (!existingSnapshot.exists()) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
     }
 
-    const body = await request.json()
-    const { name, description, price, gamepassId, tags, type, images, maker, boosterExclusive, active } = body
+    const body = await req.json();
+    const {
+      name,
+      description,
+      price,
+      gamepassId,
+      active,
+      tags,
+      type,
+      images,
+      maker,
+      boosterExclusive,
+    } = body;
 
-    if (price !== undefined && price < 0) {
-      return NextResponse.json({ error: 'Price cannot be negative' }, { status: 400 })
-    }
+    // Build update object with only provided fields
+    const updates: Record<string, unknown> = {};
 
-    const updates: Record<string, unknown> = {
-      updatedAt: Date.now(),
-      updatedBy: session.user.discordId,
-    }
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (price !== undefined) updates.price = price;
+    if (gamepassId !== undefined) updates.gamepassId = gamepassId || null;
+    if (active !== undefined) updates.active = active;
+    if (tags !== undefined) updates.tags = tags;
+    if (type !== undefined) updates.type = type;
+    if (images !== undefined) updates.images = images;
+    if (maker !== undefined) updates.maker = maker;
+    if (boosterExclusive !== undefined) updates.boosterExclusive = boosterExclusive;
 
-    if (name !== undefined) updates.name = name
-    if (description !== undefined) updates.description = description
-    if (price !== undefined) updates.price = Number(price)
-    if (gamepassId !== undefined) updates.gamepassId = String(gamepassId)
-    if (tags !== undefined) updates.tags = tags
-    if (type !== undefined) updates.type = type
-    if (images !== undefined) {
-      updates.images = {
-        front: images.front || '',
-        back: images.back || '',
-      }
-    }
-    if (maker !== undefined) updates.maker = maker
-    if (boosterExclusive !== undefined) updates.boosterExclusive = Boolean(boosterExclusive)
-    if (active !== undefined) updates.active = Boolean(active)
+    await db.ref(`products/${id}`).update(updates);
 
-    await db.ref(`products/${id}`).update(updates)
-
-    // Add audit log
-    const auditRef = db.ref('auditLogs').push()
+    // Create audit log
+    const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {
-      action: 'product_update',
-      actor: {
-        discordId: session.user.discordId,
-        username: session.user.name || 'Unknown',
-      },
-      target: {
-        productId: id,
-      },
-      details: { changes: updates },
-      timestamp: Date.now(),
-    }
-    await auditRef.set({ ...auditLog, id: auditRef.key! })
+      action: 'edit_product',
+      performedBy: session.user.discordId,
+      performedByRole: session.user.role,
+      targetProductId: id,
+      details: `Edited product "${name || id}" (ID: ${id}). Fields: ${Object.keys(updates).join(', ')}`,
+      createdAt: Date.now(),
+    };
+    await auditRef.set(auditLog);
 
-    // Fetch updated product and return
-    const updatedSnapshot = await db.ref(`products/${id}`).once('value')
-    const updatedData = updatedSnapshot.val()
+    // Return updated product
+    const updatedSnapshot = await db.ref(`products/${id}`).once('value');
+    const updatedProduct = parseProduct(id, updatedSnapshot.val() as Record<string, unknown>);
 
-    return NextResponse.json(parseProduct(updatedData as Record<string, unknown>))
+    return NextResponse.json(updatedProduct);
   } catch (error) {
-    console.error('Error updating product:', error)
-    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
+    console.error(`[PUT /api/products/${id}] Error:`, error);
+    return NextResponse.json(
+      { error: 'Failed to update product' },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE /api/products/[id] - Delete a product (owner only)
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// ============================================================
+// DELETE /api/products/[id] - Soft-delete a product (owner only)
+// ============================================================
+
+export async function DELETE(_req: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== 'owner') {
+      return NextResponse.json(
+        { error: 'Unauthorized. Owner access required.' },
+        { status: 403 }
+      );
     }
 
-    const role = session.user.role as string
-    if (role !== 'owner') {
-      return NextResponse.json({ error: 'Forbidden: Owner access required' }, { status: 403 })
-    }
-
-    const { id } = await params
+    const { id } = await params;
 
     // Check product exists
-    const existingSnapshot = await db.ref(`products/${id}`).once('value')
-    const existingData = existingSnapshot.val()
-    if (!existingData) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    const existingSnapshot = await db.ref(`products/${id}`).once('value');
+    if (!existingSnapshot.exists()) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
     }
 
-    // Soft delete by marking inactive
+    const existingData = existingSnapshot.val() as Record<string, unknown>;
+    const productName = (existingData.name as string) || id;
+
+    // Soft-delete: set active = false
     await db.ref(`products/${id}`).update({
       active: false,
-      updatedAt: Date.now(),
-      updatedBy: session.user.discordId,
-    })
+      deletedAt: Date.now(),
+      deletedBy: session.user.discordId,
+    });
 
-    // Add audit log
-    const auditRef = db.ref('auditLogs').push()
+    // Create audit log
+    const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {
-      action: 'product_delete',
-      actor: {
-        discordId: session.user.discordId,
-        username: session.user.name || 'Unknown',
-      },
-      target: {
-        productId: id,
-      },
-      details: {
-        productName: existingData.name,
-        price: existingData.price,
-      },
-      timestamp: Date.now(),
-    }
-    await auditRef.set({ ...auditLog, id: auditRef.key! })
+      action: 'delete_product',
+      performedBy: session.user.discordId,
+      performedByRole: session.user.role,
+      targetProductId: id,
+      details: `Soft-deleted product "${productName}" (ID: ${id})`,
+      createdAt: Date.now(),
+    };
+    await auditRef.set(auditLog);
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({
+      message: `Product "${productName}" has been deactivated.`,
+      id,
+    });
   } catch (error) {
-    console.error('Error deleting product:', error)
-    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
+    console.error(`[DELETE /api/products/${id}] Error:`, error);
+    return NextResponse.json(
+      { error: 'Failed to delete product' },
+      { status: 500 }
+    );
   }
 }

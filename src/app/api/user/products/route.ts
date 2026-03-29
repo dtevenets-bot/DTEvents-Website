@@ -1,64 +1,60 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { db, parseProduct, parseUserProduct } from '@/lib/firebase'
-import type { UserProduct, Product } from '@/types'
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/firebase';
+import { parseUserProduct } from '@/lib/firebase';
+import type { UserProduct } from '@/types';
 
-// GET /api/user/products - Get user's owned products (auth required)
-export async function GET(request: NextRequest) {
+// ============================================================
+// GET /api/user/products - Get user's owned products (non-revoked)
+// ============================================================
+
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.robloxUserId) {
+      return NextResponse.json(
+        { error: 'Authentication required with linked Roblox account.' },
+        { status: 401 }
+      );
     }
 
-    const { searchParams } = new URL(request.url)
-    const includeRevoked = searchParams.get('includeRevoked') === 'true'
+    const snapshot = await db
+      .ref('userProducts')
+      .orderByChild('userId')
+      .equalTo(session.user.robloxUserId)
+      .once('value');
 
-    const discordId = session.user.discordId
-
-    const snapshot = await db.ref(`userProducts/${discordId}`).once('value')
-    const data = snapshot.val()
-
-    if (!data) {
-      return NextResponse.json([])
+    if (!snapshot.exists()) {
+      return NextResponse.json([]);
     }
 
-    let userProducts: UserProduct[] = Object.values(data).map(
-      (p) => parseUserProduct(p as Record<string, unknown>)
-    )
+    const raw = snapshot.val() as Record<string, Record<string, unknown>>;
 
-    // Filter out revoked unless requested
-    if (!includeRevoked) {
-      userProducts = userProducts.filter((p) => !p.revoked)
-    }
+    const products: UserProduct[] = [];
 
-    // Fetch full product details for each owned product
-    const results: { userProduct: UserProduct; product: Product | null }[] = []
-
-    for (const userProduct of userProducts) {
-      const productSnapshot = await db.ref(`products/${userProduct.productId}`).once('value')
-      const productData = productSnapshot.val()
-
-      if (productData) {
-        results.push({
-          userProduct,
-          product: parseProduct(productData as Record<string, unknown>),
-        })
-      } else {
-        results.push({
-          userProduct,
-          product: null,
-        })
+    for (const [id, data] of Object.entries(raw)) {
+      // Only include non-revoked products
+      if (data.revokedAt !== null && data.revokedAt !== undefined) {
+        continue;
       }
+      products.push(parseUserProduct(id, data));
     }
 
-    // Sort by most recently granted first
-    results.sort((a, b) => b.userProduct.grantedAt - a.userProduct.grantedAt)
+    // Sort by newest first
+    products.sort((a, b) => {
+      const aTime = typeof a.grantedAt === 'number' ? a.grantedAt : new Date(a.grantedAt).getTime();
+      const bTime = typeof b.grantedAt === 'number' ? b.grantedAt : new Date(b.grantedAt).getTime();
+      return bTime - aTime;
+    });
 
-    return NextResponse.json(results)
+    return NextResponse.json(products);
   } catch (error) {
-    console.error('Error fetching user products:', error)
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+    console.error('[GET /api/user/products] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch user products.' },
+      { status: 500 }
+    );
   }
 }

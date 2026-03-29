@@ -1,124 +1,125 @@
-// ===== User & Auth Types =====
+// ============================================================
+// Core Domain Types
+// ============================================================
 
-export type UserRole = 'user' | 'booster' | 'admin' | 'owner'
+export type UserRole = 'owner' | 'admin' | 'booster' | 'user';
 
 export interface DiscordUser {
-  id: string
-  username: string
-  avatar: string | null
-  discriminator: string
+  id: string;
+  username: string;
+  discriminator: string;
+  avatar: string | null;
+  globalName: string | null;
 }
 
 export interface UserSession {
-  discordUser: DiscordUser
-  role: UserRole
-  robloxUserId: string | null
+  id: string;
+  discordId: string;
+  username: string;
+  avatar: string;
+  role: UserRole;
+  robloxUserId: string | null;
 }
 
 export interface VerificationData {
-  discordId: string
-  username: string
-  avatar: string | null
-  discriminator: string
-  roles: string[]
-  role: UserRole
-  robloxUserId: string | null
-  createdAt: number
-  expiresAt: number
+  discordId: string;
+  username: string;
+  avatar: string;
+  role: UserRole;
+  robloxUserId: string;
+  createdAt: number;
+  expiresAt: number;
 }
 
-// ===== Product Types =====
+// ============================================================
+// Product Types
+// ============================================================
+
+export type ProductTag = 'new' | 'popular' | 'limited' | 'sale' | 'featured' | 'exclusive';
+
+export type ProductType = 'gamepass' | 'asset' | 'plugin' | 'tool' | 'other';
+
+export interface ProductImages {
+  front: string;
+  back: string;
+}
 
 export interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  gamepassId: string
-  active: boolean
-  createdAt: number
-  createdBy: string
-  updatedAt?: number
-  updatedBy?: string
-  // Extended fields
-  tags: string[]
-  type: string
-  images: {
-    front: string
-    back: string
-  }
-  maker: string
-  boosterExclusive: boolean
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  gamepassId: number | null;
+  active: boolean;
+  createdAt: string | number;
+  createdBy: string;
+  tags: ProductTag[];
+  type: ProductType;
+  images: ProductImages;
+  maker: string;
+  boosterExclusive: boolean;
 }
 
-export type ProductTag = 'budget' | 'free' | 'flux_kit_ready' | 'new'
+export interface ProductFilters {
+  search?: string;
+  tags?: ProductTag[];
+  types?: ProductType[];
+  priceMin?: number;
+  priceMax?: number;
+  boosterOnly?: boolean;
+}
 
-export type ProductType = 'profile' | 'venue' | 'wash' | 'other'
-
-// ===== User Link Types =====
+// ============================================================
+// User-Related Types
+// ============================================================
 
 export interface UserLink {
-  discordId: string
-  robloxUserId: string
-  linkedAt: number
-  linkedBy: string
+  discordId: string;
+  robloxUserId: string;
+  linkedAt: string | number;
 }
-
-// ===== User Product Types =====
 
 export interface UserProduct {
-  discordId: string
-  productId: string
-  grantedAt: number
-  grantedBy: string
-  source: 'purchase' | 'admin_grant' | 'transfer'
-  revoked?: boolean
-  revokedAt?: number
-  revokedBy?: string
+  id: string;
+  userId: string;
+  productId: string;
+  productName: string;
+  grantedBy: string;
+  grantedAt: string | number;
+  revokedAt: string | number | null;
+  revokedBy: string | null;
 }
 
-// ===== Cart Types =====
+// ============================================================
+// Cart Types
+// ============================================================
 
 export interface CartItem {
-  productId: string
-  productName: string
-  productPrice: number
-  quantity: number
+  productId: string;
+  productName: string;
+  price: number;
+  quantity: number;
+  image: string;
 }
 
 export interface TempCart {
-  robloxUserId: string
-  discordId: string
-  products: CartItem[]
-  createdAt: number
-  expiresAt: number
+  robloxUserId: string;
+  items: CartItem[];
+  createdAt: string | number;
+  expiresAt: string | number;
 }
 
-// ===== Audit Log Types =====
+// ============================================================
+// Audit Log
+// ============================================================
 
 export interface AuditLog {
-  id: string
-  action: string
-  actor: {
-    discordId: string
-    username: string
-  }
-  target?: {
-    discordId?: string
-    robloxUserId?: string
-    productId?: string
-  }
-  details: Record<string, unknown>
-  timestamp: number
-}
-
-// ===== Filter Types =====
-
-export interface ProductFilters {
-  search: string
-  tags: string[]
-  types: string[]
-  priceMin: number | null
-  priceMax: number | null
-  boosterOnly: boolean
+  id: string;
+  action: 'grant' | 'revoke' | 'create_product' | 'edit_product' | 'delete_product' | 'announce_product';
+  performedBy: string;
+  performedByRole: UserRole;
+  targetUserId?: string;
+  targetProductId?: string;
+  details: string;
+  createdAt: string | number;
 }

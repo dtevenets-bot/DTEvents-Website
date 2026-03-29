@@ -1,34 +1,22 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { SessionProvider } from "next-auth/react"
-import { ThemeProvider } from "@/components/theme-provider"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-
-function makeQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 60 * 1000,
-        refetchOnWindowFocus: false,
-      },
-    },
-  })
-}
-
-let browserQueryClient: QueryClient | undefined
-
-function getQueryClient() {
-  if (typeof window === "undefined") {
-    return makeQueryClient()
-  } else {
-    if (!browserQueryClient) browserQueryClient = makeQueryClient()
-    return browserQueryClient
-  }
-}
+import { SessionProvider } from 'next-auth/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@/components/theme-provider';
+import { useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = React.useState(() => getQueryClient())
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60 * 1000, // 1 minute
+            refetchOnWindowFocus: false,
+          },
+        },
+      })
+  );
 
   return (
     <SessionProvider>
@@ -43,5 +31,5 @@ export function Providers({ children }: { children: React.ReactNode }) {
         </ThemeProvider>
       </QueryClientProvider>
     </SessionProvider>
-  )
+  );
 }

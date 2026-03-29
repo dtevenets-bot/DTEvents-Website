@@ -1,105 +1,123 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { db, parseProduct } from '@/lib/firebase'
-import type { AuditLog } from '@/types'
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/firebase';
+import { parseProduct } from '@/lib/firebase';
+import type { AuditLog, UserRole } from '@/types';
 
-// POST /api/admin/grant - Grant a product to a user (admin+ required)
-export async function POST(request: NextRequest) {
+const ROLE_HIERARCHY: Record<UserRole, number> = {
+  owner: 4,
+  admin: 3,
+  booster: 2,
+  user: 1,
+};
+
+// ============================================================
+// POST /api/admin/grant - Grant a product to a user (admin+)
+// ============================================================
+
+export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await getServerSession(authOptions);
 
-    const role = session.user.role as string
-    if (role !== 'admin' && role !== 'owner') {
-      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
-    }
-
-    const body = await request.json()
-    const { targetDiscordId, productId, reason } = body as {
-      targetDiscordId: string
-      productId: string
-      reason?: string
-    }
-
-    if (!targetDiscordId || !productId) {
+    if (
+      !session?.user ||
+      !ROLE_HIERARCHY[session.user.role] ||
+      ROLE_HIERARCHY[session.user.role] < ROLE_HIERARCHY['admin']
+    ) {
       return NextResponse.json(
-        { error: 'Missing required fields: targetDiscordId, productId' },
+        { error: 'Unauthorized. Admin or higher access required.' },
+        { status: 403 }
+      );
+    }
+
+    const body = await req.json();
+    const { userId, productId } = body;
+
+    if (!userId || !productId) {
+      return NextResponse.json(
+        { error: 'userId and productId are required.' },
         { status: 400 }
-      )
+      );
     }
 
-    // Check product exists and is active
-    const productSnapshot = await db.ref(`products/${productId}`).once('value')
-    const productData = productSnapshot.val()
-    if (!productData) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-    }
-    if (!productData.active) {
-      return NextResponse.json({ error: 'Product is not active' }, { status: 400 })
-    }
-
-    // Check if user already has this product (non-revoked)
-    const existingProductSnapshot = await db
-      .ref(`userProducts/${targetDiscordId}/${productId}`)
-      .once('value')
-    const existingProduct = existingProductSnapshot.val()
-    if (existingProduct && !existingProduct.revoked) {
+    // Verify product exists and is active
+    const productSnapshot = await db.ref(`products/${productId}`).once('value');
+    if (!productSnapshot.exists()) {
       return NextResponse.json(
-        { error: 'User already owns this product' },
-        { status: 409 }
-      )
+        { error: 'Product not found.' },
+        { status: 404 }
+      );
     }
 
-    // If user had a revoked entry, remove it and create fresh
-    if (existingProduct && existingProduct.revoked) {
-      await db.ref(`userProducts/${targetDiscordId}/${productId}`).remove()
+    const product = parseProduct(productId, productSnapshot.val() as Record<string, unknown>);
+
+    if (!product.active) {
+      return NextResponse.json(
+        { error: 'Product is not active.' },
+        { status: 400 }
+      );
     }
 
-    const now = Date.now()
-    const userProductData = {
-      discordId: targetDiscordId,
+    // Check if user already owns this product (non-revoked)
+    const existingSnapshot = await db
+      .ref('userProducts')
+      .orderByChild('userId')
+      .equalTo(userId)
+      .once('value');
+
+    if (existingSnapshot.exists()) {
+      const existingData = existingSnapshot.val() as Record<string, Record<string, unknown>>;
+      const alreadyOwned = Object.values(existingData).some(
+        (p) =>
+          p.productId === productId &&
+          (p.revokedAt === null || p.revokedAt === undefined)
+      );
+
+      if (alreadyOwned) {
+        return NextResponse.json(
+          { error: 'User already owns this product.' },
+          { status: 409 }
+        );
+      }
+    }
+
+    // Grant the product
+    const userProductRef = db.ref('userProducts').push();
+    const userProductId = userProductRef.key!;
+
+    await userProductRef.set({
+      userId,
       productId,
-      grantedAt: now,
+      productName: product.name,
       grantedBy: session.user.discordId,
-      source: 'admin_grant' as const,
-    }
+      grantedAt: Date.now(),
+      revokedAt: null,
+      revokedBy: null,
+    });
 
-    await db.ref(`userProducts/${targetDiscordId}/${productId}`).set(userProductData)
-
-    // Add audit log
-    const auditRef = db.ref('auditLogs').push()
-    const product = parseProduct(productData as Record<string, unknown>)
+    // Create audit log
+    const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {
-      action: 'product_grant',
-      actor: {
-        discordId: session.user.discordId,
-        username: session.user.name || 'Unknown',
-      },
-      target: {
-        discordId: targetDiscordId,
-        productId,
-      },
-      details: {
-        productName: product.name,
-        reason: reason || null,
-      },
-      timestamp: now,
-    }
-    await auditRef.set({ ...auditLog, id: auditRef.key! })
+      action: 'grant',
+      performedBy: session.user.discordId,
+      performedByRole: session.user.role,
+      targetUserId: userId,
+      targetProductId: productId,
+      details: `Granted product "${product.name}" (${productId}) to user ${userId}`,
+      createdAt: Date.now(),
+    };
+    await auditRef.set(auditLog);
 
     return NextResponse.json({
-      success: true,
-      granted: {
-        discordId: targetDiscordId,
-        productId,
-        productName: product.name,
-      },
-    })
+      message: `Product "${product.name}" granted to user ${userId}.`,
+      userProductId,
+    });
   } catch (error) {
-    console.error('Error granting product:', error)
-    return NextResponse.json({ error: 'Failed to grant product' }, { status: 500 })
+    console.error('[POST /api/admin/grant] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to grant product.' },
+      { status: 500 }
+    );
   }
 }

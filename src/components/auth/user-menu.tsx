@@ -1,90 +1,104 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { signOut, useSession } from "next-auth/react"
-import { useAuthStore, hasRole } from "@/stores/auth-store"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import { useSession, signOut } from 'next-auth/react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { LogOut, Package, ChevronDown } from "lucide-react"
-
-const roleLabels: Record<string, string> = {
-  user: "User",
-  booster: "Booster",
-  admin: "Admin",
-  owner: "Owner",
-}
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  User,
+  Package,
+  ShoppingBag,
+  Shield,
+  Settings,
+  LogOut,
+  LogIn,
+} from 'lucide-react';
+import { useAuthStore } from '@/stores/auth-store';
 
 export function UserMenu() {
-  const { data: session } = useSession()
-  const user = useAuthStore((s) => s.user)
+  const { data: session } = useSession();
+  const { user, isAdmin, isOwner, isAuthenticated } = useAuthStore();
 
-  const discordUser = user?.discordUser
-  const role = user?.role ?? "user"
-  const initials = discordUser?.username
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) ?? "U"
+  const handleLogin = () => {
+    window.dispatchEvent(new CustomEvent('open-login'));
+  };
 
-  const avatarUrl = discordUser?.avatar
-    ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
-    : null
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/' });
+  };
+
+  if (!session || !isAuthenticated) {
+    return (
+      <Button
+        variant="ghost"
+        className="hover:bg-foreground hover:text-background"
+        onClick={handleLogin}
+      >
+        <LogIn className="size-4 mr-2" />
+        Login
+      </Button>
+    );
+  }
+
+  const displayName = user?.username || session.user?.username || 'User';
+  const displayAvatar = user?.avatar || session.user?.avatar || '';
+  const displayRole = user?.role || session.user?.role || 'user';
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-foreground hover:text-background transition-colors duration-300 outline-none">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={avatarUrl ?? undefined} alt={discordUser?.username ?? "User"} />
-            <AvatarFallback className="text-xs font-semibold">{initials}</AvatarFallback>
+        <Button variant="ghost" className="gap-2 hover:bg-foreground hover:text-background">
+          <Avatar className="size-6">
+            {displayAvatar && <AvatarImage src={displayAvatar} alt={displayName} />}
+            <AvatarFallback className="text-xs">
+              {displayName.charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
-          <span className="hidden sm:block text-sm font-medium max-w-[100px] truncate">
-            {discordUser?.username ?? "User"}
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-        </button>
+          <span className="hidden sm:inline text-sm">{displayName}</span>
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+            {displayRole}
+          </Badge>
+        </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="flex items-center gap-2">
-          <Avatar className="h-7 w-7">
-            <AvatarImage src={avatarUrl ?? undefined} alt={discordUser?.username ?? "User"} />
-            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">{discordUser?.username}</span>
-            <Badge variant="outline" className="w-fit text-[10px] px-1.5 py-0 mt-0.5">
-              {roleLabels[role] ?? "User"}
-            </Badge>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent("hub-navigate", { detail: "my-products" }))
-          }}
-          className="cursor-pointer"
-        >
-          <Package className="h-4 w-4 mr-2" />
-          My Products
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem>
+          <User className="size-4 mr-2" />
+          Profile
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => signOut({ callbackUrl: "/" })}
-          className="cursor-pointer text-destructive focus:text-destructive"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
+        <DropdownMenuItem>
+          <Package className="size-4 mr-2" />
+          Products
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <ShoppingBag className="size-4 mr-2" />
+          My Products
+        </DropdownMenuItem>
+        {isAdmin() && (
+          <DropdownMenuItem>
+            <Shield className="size-4 mr-2" />
+            Admin
+          </DropdownMenuItem>
+        )}
+        {isOwner() && (
+          <DropdownMenuItem>
+            <Settings className="size-4 mr-2" />
+            Manage
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="size-4 mr-2" />
           Logout
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

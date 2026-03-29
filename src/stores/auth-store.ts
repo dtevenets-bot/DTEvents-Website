@@ -1,45 +1,60 @@
-import { create } from 'zustand'
-import { type UserRole, type UserSession } from '@/types'
+import { create } from 'zustand';
+import type { UserSession, UserRole } from '@/types';
 
 interface AuthState {
-  isAuthenticated: boolean
-  user: UserSession | null
-  isLoading: boolean
-  setAuth: (user: UserSession | null) => void
-  setLoading: (loading: boolean) => void
-  logout: () => void
+  isAuthenticated: boolean;
+  user: UserSession | null;
+  isLoading: boolean;
+  setAuth: (user: UserSession | null) => void;
+  setLoading: (loading: boolean) => void;
+  logout: () => void;
+  hasRole: (role: UserRole) => boolean;
+  isOwner: () => boolean;
+  isAdmin: () => boolean;
+  isBooster: () => boolean;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+const ROLE_HIERARCHY: Record<UserRole, number> = {
+  owner: 4,
+  admin: 3,
+  booster: 2,
+  user: 1,
+};
+
+export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   user: null,
   isLoading: true,
-  setAuth: (user) => set({ user, isAuthenticated: !!user, isLoading: false }),
-  setLoading: (isLoading) => set({ isLoading }),
-  logout: () => set({ user: null, isAuthenticated: false, isLoading: false }),
-}))
 
-// Helper to check if user has at least the required role
-const roleHierarchy: Record<UserRole, number> = {
-  user: 0,
-  booster: 1,
-  admin: 2,
-  owner: 3,
-}
+  setAuth: (user: UserSession | null) => {
+    set({
+      isAuthenticated: !!user,
+      user,
+      isLoading: false,
+    });
+  },
 
-export function hasRole(userRole: UserRole | null | undefined, requiredRole: UserRole): boolean {
-  if (!userRole) return false
-  return (roleHierarchy[userRole] ?? 0) >= (roleHierarchy[requiredRole] ?? 0)
-}
+  setLoading: (loading: boolean) => {
+    set({ isLoading: loading });
+  },
 
-export function isOwner(role: UserRole | null | undefined): boolean {
-  return role === 'owner'
-}
+  logout: () => {
+    set({
+      isAuthenticated: false,
+      user: null,
+      isLoading: false,
+    });
+  },
 
-export function isAdmin(role: UserRole | null | undefined): boolean {
-  return role === 'admin' || role === 'owner'
-}
+  hasRole: (role: UserRole) => {
+    const { user } = get();
+    if (!user) return false;
+    return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[role];
+  },
 
-export function isBooster(role: UserRole | null | undefined): boolean {
-  return role === 'booster' || role === 'admin' || role === 'owner'
-}
+  isOwner: () => get().hasRole('owner'),
+
+  isAdmin: () => get().hasRole('admin'),
+
+  isBooster: () => get().hasRole('booster'),
+}));

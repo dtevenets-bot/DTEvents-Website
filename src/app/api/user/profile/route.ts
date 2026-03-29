@@ -1,56 +1,70 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/firebase'
-import type { UserLink } from '@/types'
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/firebase';
 
-// GET /api/user/profile - Get user's full profile (auth required)
+// ============================================================
+// GET /api/user/profile - Get user profile
+// ============================================================
+
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
+
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Authentication required.' },
+        { status: 401 }
+      );
     }
 
-    const discordId = session.user.discordId
+    // Fetch Roblox link from Firebase
+    let robloxUserId: string | null = session.user.robloxUserId;
+    let robloxLinkedAt: string | number | null = null;
 
-    // Fetch user link from Firebase to get robloxUserId
-    let userLink: UserLink | null = null
-    const linkSnapshot = await db.ref(`userLinks/${discordId}`).once('value')
-    const linkData = linkSnapshot.val()
-    if (linkData) {
-      userLink = linkData as UserLink
+    if (session.user.discordId) {
+      const linkSnapshot = await db
+        .ref(`userLinks/${session.user.discordId}`)
+        .once('value');
+
+      if (linkSnapshot.exists()) {
+        const linkData = linkSnapshot.val() as Record<string, unknown>;
+        robloxUserId = (linkData.robloxUserId as string) || robloxUserId;
+        robloxLinkedAt = linkData.linkedAt ?? null;
+      }
     }
 
-    // Fetch owned product count (non-revoked only)
-    let ownedProductCount = 0
-    const productsSnapshot = await db.ref(`userProducts/${discordId}`).once('value')
-    const productsData = productsSnapshot.val()
-    if (productsData) {
-      ownedProductCount = Object.values(productsData).filter(
-        (p: Record<string, unknown>) => !p.revoked
-      ).length
+    // Count user's products (non-revoked)
+    let productCount = 0;
+    if (robloxUserId) {
+      const productsSnapshot = await db
+        .ref('userProducts')
+        .orderByChild('userId')
+        .equalTo(robloxUserId)
+        .once('value');
+
+      if (productsSnapshot.exists()) {
+        const data = productsSnapshot.val() as Record<string, Record<string, unknown>>;
+        productCount = Object.values(data).filter(
+          (p) => p.revokedAt === null || p.revokedAt === undefined
+        ).length;
+      }
     }
 
-    const profile = {
-      // Session info
-      discordId,
-      username: session.user.name,
-      avatar: session.user.image,
+    return NextResponse.json({
+      discordId: session.user.discordId,
+      username: session.user.username,
+      avatar: session.user.avatar,
       role: session.user.role,
-      robloxUserId: session.user.robloxUserId || userLink?.robloxUserId || null,
-
-      // Linked account info
-      linked: !!userLink,
-      linkedAt: userLink?.linkedAt || null,
-
-      // Stats
-      ownedProductCount,
-    }
-
-    return NextResponse.json(profile)
+      robloxUserId,
+      robloxLinkedAt,
+      productCount,
+    });
   } catch (error) {
-    console.error('Error fetching user profile:', error)
-    return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
+    console.error('[GET /api/user/profile] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch user profile.' },
+      { status: 500 }
+    );
   }
 }
