@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
+import { cx } from "@/lib/utils"
 
 function ScrollArea({
   className,
@@ -9,7 +9,7 @@ function ScrollArea({
 }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("relative overflow-auto", className)}
+      className={cx("relative overflow-auto", className)}
       {...props}
     >
       {children}
@@ -26,7 +26,7 @@ function ScrollBar({
 }) {
   return (
     <div
-      className={cn(
+      className={cx(
         "flex touch-none p-px transition-colors select-none",
         orientation === "vertical" && "h-full w-2.5",
         orientation === "horizontal" && "h-2.5 flex-col",

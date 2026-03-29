@@ -61,12 +61,11 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
   };
 
   return (
-    <div className="space-y-6 p-4 border rounded-lg bg-background">
+    <div className="space-y-6 p-4 border rounded-lg bg-page">
       <h3 className="font-semibold text-sm">Filters</h3>
 
-      {/* Search */}
       <div className="relative">
-        <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-soft-fg" />
         <Input
           placeholder="Search products..."
           value={search}
@@ -78,9 +77,8 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
         />
       </div>
 
-      {/* Tags */}
       <div className="space-y-2">
-        <Label className="text-xs font-medium text-muted-foreground">Tags</Label>
+        <Label className="text-xs font-medium text-soft-fg">Tags</Label>
         <div className="flex flex-wrap gap-2">
           {allTags.map((tag) => (
             <label
@@ -97,9 +95,8 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
         </div>
       </div>
 
-      {/* Types */}
       <div className="space-y-2">
-        <Label className="text-xs font-medium text-muted-foreground">Type</Label>
+        <Label className="text-xs font-medium text-soft-fg">Type</Label>
         <Select
           value={selectedTypes.length === 1 ? selectedTypes[0] : undefined}
           onValueChange={(val) => {
@@ -128,7 +125,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
                   toggleType(type);
                   setTimeout(applyFilters, 0);
                 }}
-                className="text-[10px] px-2 py-0.5 border rounded-full hover:bg-foreground hover:text-background transition-colors"
+                className="text-[10px] px-2 py-0.5 border rounded-full hover:bg-ink hover:text-page transition-colors"
               >
                 {type} ×
               </button>
@@ -137,9 +134,8 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
         )}
       </div>
 
-      {/* Price Range */}
       <div className="space-y-2">
-        <Label className="text-xs font-medium text-muted-foreground">Price Range</Label>
+        <Label className="text-xs font-medium text-soft-fg">Price Range</Label>
         <div className="flex gap-2 items-center">
           <Input
             type="number"
@@ -149,7 +145,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
             className="h-8 text-sm"
             min={0}
           />
-          <span className="text-muted-foreground text-xs">to</span>
+          <span className="text-soft-fg text-xs">to</span>
           <Input
             type="number"
             placeholder="Max"
@@ -164,11 +160,10 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
         </Button>
       </div>
 
-      {/* Reset */}
       <Button
         variant="ghost"
         size="sm"
-        className="w-full hover:bg-foreground hover:text-background"
+        className="w-full hover:bg-ink hover:text-page"
         onClick={resetFilters}
       >
         <ArrowPathIcon className="size-3 mr-1" />

@@ -30,7 +30,7 @@ export function ServicesSection() {
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-3">Our Services</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-soft-fg max-w-2xl mx-auto">
             Everything you need for premium Roblox development, all under one roof.
           </p>
         </div>
@@ -39,10 +39,10 @@ export function ServicesSection() {
           {services.map((service) => (
             <Card
               key={service.title}
-              className="group border transition-colors hover:bg-foreground hover:text-background py-0"
+              className="group border transition-colors hover:bg-ink hover:text-page py-0"
             >
               <CardContent className="flex flex-col items-center text-center p-8 pt-8 gap-4">
-                <div className="size-14 rounded-full border bg-muted text-muted-foreground flex items-center justify-center group-hover:bg-foreground group-hover:text-background transition-colors">
+                <div className="size-14 rounded-full border bg-soft text-soft-fg flex items-center justify-center group-hover:bg-ink group-hover:text-page transition-colors">
                   <service.icon className="size-6" />
                 </div>
                 <h3 className="text-xl font-semibold">{service.title}</h3>

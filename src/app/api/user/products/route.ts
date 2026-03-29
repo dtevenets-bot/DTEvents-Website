@@ -5,10 +5,6 @@ import { db } from '@/lib/firebase';
 import { parseUserProduct } from '@/lib/firebase';
 import type { UserProduct } from '@/types';
 
-// ============================================================
-// GET /api/user/products - Get user's owned products (non-revoked)
-// ============================================================
-
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -35,14 +31,12 @@ export async function GET() {
     const products: UserProduct[] = [];
 
     for (const [id, data] of Object.entries(raw)) {
-      // Only include non-revoked products
       if (data.revokedAt !== null && data.revokedAt !== undefined) {
         continue;
       }
       products.push(parseUserProduct(id, data));
     }
 
-    // Sort by newest first
     products.sort((a, b) => {
       const aTime = typeof a.grantedAt === 'number' ? a.grantedAt : new Date(a.grantedAt).getTime();
       const bTime = typeof b.grantedAt === 'number' ? b.grantedAt : new Date(b.grantedAt).getTime();

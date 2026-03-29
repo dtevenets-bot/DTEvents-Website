@@ -91,23 +91,18 @@ export function CheckoutModal() {
             <p className="text-sm text-center">
               Cart saved successfully! Open the Roblox hub to complete your purchase.
             </p>
-            <Button
-              className="hover:bg-foreground/90"
-              asChild
+            <a
+              href="https://www.roblox.com/games/start?placeId=PLACEHOLDER"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all h-9 px-4 py-2 w-full hover:bg-ink hover:text-page"
             >
-              <a
-                href="https://www.roblox.com/games/start?placeId=PLACEHOLDER"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <ArrowTopRightOnSquareIcon className="size-4 mr-2" />
-                Open Roblox Hub
-              </a>
-            </Button>
+              <ArrowTopRightOnSquareIcon className="size-4 mr-2" />
+              Open Roblox Hub
+            </a>
           </div>
         ) : (
           <>
-            {/* Cart Summary */}
             <ScrollArea className="max-h-48 -mx-6 px-6">
               <div className="space-y-3 py-2">
                 {items.map((item) => (

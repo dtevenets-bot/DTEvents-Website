@@ -106,7 +106,7 @@ export function AdminPanel() {
           <ShieldCheckIcon className="size-5" />
           Admin Panel
         </h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-soft-fg">
           Manage product grants and revocations.
         </p>
       </div>
@@ -155,7 +155,7 @@ export function AdminPanel() {
                 </div>
 
                 {grantState.error && (
-                  <p className="text-sm text-destructive">{grantState.error}</p>
+                  <p className="text-sm text-err">{grantState.error}</p>
                 )}
                 {grantState.success && (
                   <div className="flex items-center gap-2 text-sm text-green-600">
@@ -167,7 +167,7 @@ export function AdminPanel() {
                 <Button
                   type="submit"
                   disabled={grantState.loading || !grantUserId || !grantProductId}
-                  className="hover:bg-foreground/90"
+                  className="hover:bg-ink/90"
                 >
                   {grantState.loading && <ArrowPathIcon className="size-4 animate-spin" />}
                   {grantState.loading ? 'Granting...' : 'Grant Product'}
@@ -199,7 +199,7 @@ export function AdminPanel() {
                 </div>
 
                 {revokeState.error && (
-                  <p className="text-sm text-destructive">{revokeState.error}</p>
+                  <p className="text-sm text-err">{revokeState.error}</p>
                 )}
                 {revokeState.success && (
                   <div className="flex items-center gap-2 text-sm text-green-600">

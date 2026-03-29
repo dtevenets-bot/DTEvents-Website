@@ -3,11 +3,7 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 
-import { cn } from "@/lib/utils"
-
-/* ------------------------------------------------------------------ */
-/*  Dialog                                                             */
-/* ------------------------------------------------------------------ */
+import { cx } from "@/lib/utils"
 
 interface DialogContextValue {
   open: boolean
@@ -50,10 +46,6 @@ function Dialog({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  DialogContent                                                       */
-/* ------------------------------------------------------------------ */
-
 function DialogContent({
   className,
   children,
@@ -87,7 +79,6 @@ function DialogContent({
     return () => dialog.removeEventListener("close", handleClose)
   }, [setOpen])
 
-  // Close on escape
   React.useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
@@ -109,16 +100,14 @@ function DialogContent({
       aria-modal
       className="fixed inset-0 z-50 flex items-center justify-center"
     >
-      {/* Overlay */}
       <div
         className="fixed inset-0 z-50 bg-black/50 animate-in fade-in-0 duration-200"
         onClick={() => setOpen(false)}
         aria-hidden="true"
       />
-      {/* Content panel */}
       <div
-        className={cn(
-          "bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg animate-in fade-in-0 zoom-in-95 duration-200 sm:max-w-lg",
+        className={cx(
+          "bg-page fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg animate-in fade-in-0 zoom-in-95 duration-200 sm:max-w-lg",
           className
         )}
         {...props}
@@ -127,7 +116,7 @@ function DialogContent({
         {showCloseButton && (
           <button
             type="button"
-            className="ring-offset-background focus:ring-ring absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className="ring-offset-page focus:ring-focus-ring absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
             onClick={() => setOpen(false)}
             aria-label="Close"
           >
@@ -155,10 +144,6 @@ function DialogContent({
   return createPortal(content, document.body)
 }
 
-/* ------------------------------------------------------------------ */
-/*  DialogTrigger                                                       */
-/* ------------------------------------------------------------------ */
-
 function DialogTrigger({
   children,
   ...props
@@ -176,27 +161,19 @@ function DialogTrigger({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  DialogHeader                                                        */
-/* ------------------------------------------------------------------ */
-
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cx("flex flex-col gap-2 text-center sm:text-left", className)}
       {...props}
     />
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  DialogFooter                                                        */
-/* ------------------------------------------------------------------ */
-
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn(
+      className={cx(
         "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
         className
       )}
@@ -205,22 +182,14 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  DialogTitle                                                         */
-/* ------------------------------------------------------------------ */
-
 function DialogTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
     <h2
-      className={cn("text-lg leading-none font-semibold", className)}
+      className={cx("text-lg leading-none font-semibold", className)}
       {...props}
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  DialogDescription                                                   */
-/* ------------------------------------------------------------------ */
 
 function DialogDescription({
   className,
@@ -228,15 +197,11 @@ function DialogDescription({
 }: React.ComponentProps<"p">) {
   return (
     <p
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cx("text-soft-fg text-sm", className)}
       {...props}
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  DialogClose (convenience)                                           */
-/* ------------------------------------------------------------------ */
 
 function DialogClose({
   className,

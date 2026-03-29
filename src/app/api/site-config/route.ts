@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 
-// ============================================================
-// GET /api/site-config - Get announced product from site config
-// ============================================================
-
 export async function GET() {
   try {
     const snapshot = await db

@@ -21,7 +21,6 @@ export function MyProductsView() {
           setProducts(data);
         }
       } catch {
-        // Silent fail
       } finally {
         setLoading(false);
       }
@@ -33,7 +32,7 @@ export function MyProductsView() {
     <div>
       <div className="mb-6">
         <h2 className="text-2xl font-bold">My Products</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-soft-fg">
           Products you own and have been granted access to.
         </p>
       </div>
@@ -51,7 +50,7 @@ export function MyProductsView() {
           ))}
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
+        <div className="text-center py-16 text-soft-fg">
           <CubeIcon className="size-12 mx-auto mb-4 opacity-40" />
           <p>You don&apos;t own any products yet.</p>
           <p className="text-sm mt-1">Browse the store to find something you like!</p>
@@ -68,14 +67,14 @@ export function MyProductsView() {
               <Card className="border py-0">
                 <CardContent className="p-4 flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="size-10 bg-muted rounded-md flex items-center justify-center shrink-0">
+                    <div className="size-10 bg-soft rounded-md flex items-center justify-center shrink-0">
                       <CheckCircleIcon className="size-5 text-green-500" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold text-sm truncate">
                         {up.productName}
                       </h3>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-soft-fg">
                         ID: {up.productId.slice(0, 8)}...
                       </p>
                     </div>

@@ -3,10 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/firebase';
 
-// ============================================================
-// GET /api/user/profile - Get user profile
-// ============================================================
-
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -18,7 +14,6 @@ export async function GET() {
       );
     }
 
-    // Fetch Roblox link from Firebase
     let robloxUserId: string | null = session.user.robloxUserId;
     let robloxLinkedAt: string | number | null = null;
 
@@ -34,7 +29,6 @@ export async function GET() {
       }
     }
 
-    // Count user's products (non-revoked)
     let productCount = 0;
     if (robloxUserId) {
       const productsSnapshot = await db

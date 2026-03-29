@@ -41,7 +41,6 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
         setProducts(data);
       }
     } catch {
-      // Silent fail
     } finally {
       setLoading(false);
     }
@@ -68,12 +67,10 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
-      {/* Sidebar Filters */}
       <div className="lg:w-64 shrink-0">
         <ProductFilters onFilterChange={setFilters} />
       </div>
 
-      {/* Product Grid */}
       <div className="flex-1">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -88,7 +85,7 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
+          <div className="text-center py-16 text-soft-fg">
             <MagnifyingGlassIcon className="size-12 mx-auto mb-4 opacity-40" />
             <p>No products found. Try adjusting your filters.</p>
           </div>
@@ -101,9 +98,9 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: Math.min(idx * 0.05, 0.3) }}
               >
-                <Card className="overflow-hidden group border transition-colors hover:bg-foreground hover:text-background py-0">
+                <Card className="overflow-hidden group border transition-colors hover:bg-ink hover:text-page py-0">
                   <div
-                    className="aspect-video bg-muted overflow-hidden cursor-pointer relative"
+                    className="aspect-video bg-soft overflow-hidden cursor-pointer relative"
                     onClick={() => handleViewProduct(product)}
                   >
                     {product.images?.front ? (
@@ -139,7 +136,7 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
                           <Badge
                             key={tag}
                             variant="outline"
-                            className="text-[10px] group-hover:border-background/30 group-hover:text-background"
+                            className="text-[10px] group-hover:border-page/30 group-hover:text-page"
                           >
                             {tag}
                           </Badge>
@@ -150,7 +147,7 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 text-xs group-hover:border-background/30"
+                        className="flex-1 text-xs group-hover:border-page/30"
                         onClick={() => handleViewProduct(product)}
                       >
                         <EyeIcon className="size-3 mr-1" />
@@ -173,7 +170,6 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
         )}
       </div>
 
-      {/* Product Detail Modal */}
       <ProductDetailModal
         product={selectedProduct}
         open={detailOpen}

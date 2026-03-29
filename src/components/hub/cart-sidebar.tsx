@@ -41,7 +41,7 @@ export function CartSidebar() {
         </SheetHeader>
 
         {items.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground py-12">
+          <div className="flex-1 flex items-center justify-center text-soft-fg py-12">
             <p className="text-sm">Your cart is empty.</p>
           </div>
         ) : (
@@ -53,7 +53,7 @@ export function CartSidebar() {
                     key={item.productId}
                     className="flex items-center gap-3 p-3 border rounded-lg"
                   >
-                    <div className="size-12 bg-muted rounded-md overflow-hidden shrink-0">
+                    <div className="size-12 bg-soft rounded-md overflow-hidden shrink-0">
                       {item.image ? (
                         <img
                           src={item.image}
@@ -70,7 +70,7 @@ export function CartSidebar() {
                       <p className="text-sm font-medium truncate">
                         {item.productName}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-soft-fg">
                         R${item.price} × {item.quantity}
                       </p>
                     </div>
@@ -81,7 +81,7 @@ export function CartSidebar() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="size-7 hover:bg-destructive hover:text-white"
+                        className="size-7 hover:bg-err hover:text-white"
                         onClick={() => removeItem(item.productId)}
                       >
                         <TrashIcon className="size-3.5" />
@@ -98,7 +98,7 @@ export function CartSidebar() {
                 <span className="text-lg font-bold">R${totalPrice}</span>
               </div>
               <Button
-                className="w-full hover:bg-foreground/90"
+                className="w-full hover:bg-ink/90"
                 onClick={() => {
                   setOpen(false);
                   window.dispatchEvent(new CustomEvent('open-checkout'));

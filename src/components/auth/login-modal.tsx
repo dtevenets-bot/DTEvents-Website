@@ -82,7 +82,7 @@ export function LoginModal() {
           </InputOTP>
 
           {error && (
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-sm text-err">{error}</p>
           )}
 
           <Button

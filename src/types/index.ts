@@ -1,7 +1,3 @@
-// ============================================================
-// Core Domain Types
-// ============================================================
-
 export type UserRole = 'owner' | 'admin' | 'booster' | 'user';
 
 export interface DiscordUser {
@@ -30,10 +26,6 @@ export interface VerificationData {
   createdAt: number;
   expiresAt: number;
 }
-
-// ============================================================
-// Product Types
-// ============================================================
 
 export type ProductTag = 'new' | 'popular' | 'limited' | 'sale' | 'featured' | 'exclusive';
 
@@ -69,10 +61,6 @@ export interface ProductFilters {
   boosterOnly?: boolean;
 }
 
-// ============================================================
-// User-Related Types
-// ============================================================
-
 export interface UserLink {
   discordId: string;
   robloxUserId: string;
@@ -90,10 +78,6 @@ export interface UserProduct {
   revokedBy: string | null;
 }
 
-// ============================================================
-// Cart Types
-// ============================================================
-
 export interface CartItem {
   productId: string;
   productName: string;
@@ -108,10 +92,6 @@ export interface TempCart {
   createdAt: string | number;
   expiresAt: string | number;
 }
-
-// ============================================================
-// Audit Log
-// ============================================================
 
 export interface AuditLog {
   id: string;

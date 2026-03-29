@@ -5,10 +5,6 @@ import { db } from '@/lib/firebase';
 import { parseProduct } from '@/lib/firebase';
 import type { Product, ProductTag, ProductType, AuditLog } from '@/types';
 
-// ============================================================
-// GET /api/products - List all products with filtering
-// ============================================================
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -24,7 +20,6 @@ export async function GET(req: NextRequest) {
     const boosterOnly = searchParams.get('boosterOnly') === 'true';
     const showAll = searchParams.get('showAll') === 'true';
 
-    // Check if the user is an owner (for showAll)
     const session = await getServerSession(authOptions);
     const isOwner = session?.user?.role === 'owner';
 
@@ -36,13 +31,11 @@ export async function GET(req: NextRequest) {
     for (const [id, data] of Object.entries(raw)) {
       const product = parseProduct(id, data as Record<string, unknown>);
 
-      // Skip inactive products unless owner requests all
       if (!product.active && !isOwner && !showAll) continue;
 
       products.push(product);
     }
 
-    // Apply filters
     if (search) {
       const lowerSearch = search.toLowerCase();
       products = products.filter(
@@ -75,7 +68,6 @@ export async function GET(req: NextRequest) {
       products = products.filter((p) => p.boosterExclusive);
     }
 
-    // Sort by newest first
     products.sort((a, b) => {
       const aTime = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt).getTime();
       const bTime = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt).getTime();
@@ -91,10 +83,6 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
-// ============================================================
-// POST /api/products - Create a new product (owner only)
-// ============================================================
 
 export async function POST(req: NextRequest) {
   try {
@@ -131,7 +119,6 @@ export async function POST(req: NextRequest) {
     const productRef = db.ref('products').push();
     const productId = productRef.key!;
 
-    // Handle announce: add "new" tag
     const finalTags: ProductTag[] = announce
       ? [...new Set([...tags, 'new'] as ProductTag[])]
       : tags;
@@ -156,9 +143,7 @@ export async function POST(req: NextRequest) {
 
     await productRef.set(productData);
 
-    // Handle announcement
     if (announce) {
-      // Write to siteConfig/announcedProduct
       await db.ref('siteConfig/announcedProduct').set({
         id: productId,
         name,
@@ -170,7 +155,6 @@ export async function POST(req: NextRequest) {
         announcedAt: Date.now(),
       });
 
-      // Send Discord webhook
       try {
         const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
         if (webhookUrl) {
@@ -199,11 +183,9 @@ export async function POST(req: NextRequest) {
         }
       } catch (webhookError) {
         console.error('[POST /api/products] Webhook error:', webhookError);
-        // Non-blocking: don't fail the product creation
       }
     }
 
-    // Create audit log
     const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {
       action: 'create_product',

@@ -2,11 +2,7 @@
 
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
-
-/* ------------------------------------------------------------------ */
-/*  Tabs Context                                                        */
-/* ------------------------------------------------------------------ */
+import { cx } from "@/lib/utils"
 
 interface TabsContextValue {
   value: string
@@ -17,10 +13,6 @@ const TabsContext = React.createContext<TabsContextValue>({
   value: "",
   onValueChange: undefined,
 })
-
-/* ------------------------------------------------------------------ */
-/*  Tabs                                                                */
-/* ------------------------------------------------------------------ */
 
 function Tabs({
   className,
@@ -50,16 +42,12 @@ function Tabs({
     <TabsContext.Provider
       value={{ value: activeValue, onValueChange: handleChange }}
     >
-      <div className={cn("flex flex-col gap-2", className)} {...props}>
+      <div className={cx("flex flex-col gap-2", className)} {...props}>
         {children}
       </div>
     </TabsContext.Provider>
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  TabsList                                                            */
-/* ------------------------------------------------------------------ */
 
 function TabsList({
   className,
@@ -68,18 +56,14 @@ function TabsList({
   return (
     <div
       role="tablist"
-      className={cn(
-        "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]",
+      className={cx(
+        "bg-soft text-soft-fg inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]",
         className
       )}
       {...props}
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  TabsTrigger                                                         */
-/* ------------------------------------------------------------------ */
 
 function TabsTrigger({
   className,
@@ -94,9 +78,9 @@ function TabsTrigger({
       role="tab"
       type="button"
       aria-selected={isActive}
-      className={cn(
-        "data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        isActive && "bg-background text-foreground dark:bg-input/30 dark:border-input shadow-sm",
+      className={cx(
+        "data-[state=active]:bg-page dark:data-[state=active]:text-ink focus-visible:border-focus-ring focus-visible:ring-focus-ring/50 focus-visible:outline-focus-ring dark:data-[state=active]:border-field dark:data-[state=active]:bg-field/30 text-ink dark:text-soft-fg inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        isActive && "bg-page text-ink dark:bg-field/30 dark:border-field shadow-sm",
         className
       )}
       onClick={() => ctx.onValueChange?.(value)}
@@ -104,10 +88,6 @@ function TabsTrigger({
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  TabsContent                                                         */
-/* ------------------------------------------------------------------ */
 
 function TabsContent({
   className,
@@ -120,7 +100,7 @@ function TabsContent({
   return (
     <div
       role="tabpanel"
-      className={cn("flex-1 outline-none", className)}
+      className={cx("flex-1 outline-none", className)}
       {...props}
     />
   )

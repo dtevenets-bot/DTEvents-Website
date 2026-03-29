@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
+import { cx } from "@/lib/utils"
 
 function Separator({
   className,
@@ -15,7 +15,7 @@ function Separator({
     <div
       role={decorative ? "none" : "separator"}
       aria-orientation={decorative ? undefined : orientation}
-      className={cn(
+      className={cx(
         "bg-border shrink-0",
         orientation === "horizontal" && "h-px w-full",
         orientation === "vertical" && "h-full w-px",

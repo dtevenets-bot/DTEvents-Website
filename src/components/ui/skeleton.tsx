@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils"
+import { cx } from "@/lib/utils"
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("bg-accent animate-pulse rounded-md", className)}
+      className={cx("bg-tint animate-pulse rounded-md", className)}
       {...props}
     />
   )

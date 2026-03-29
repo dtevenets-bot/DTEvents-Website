@@ -45,7 +45,6 @@ export function HeroSection() {
           setApiReady(true);
         }
       } catch {
-        // Silent fail — use default slides
       }
     }
     fetchAnnouncement();
@@ -59,7 +58,6 @@ export function HeroSection() {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   }, [slides.length]);
 
-  // Auto-slide every 5 seconds
   useEffect(() => {
     const interval = setInterval(nextSlide, 5000);
     return () => clearInterval(interval);
@@ -69,7 +67,6 @@ export function HeroSection() {
 
   return (
     <section className="relative w-full h-screen min-h-[600px] overflow-hidden flex items-center justify-center">
-      {/* YouTube Background */}
       <div className="absolute inset-0 z-0">
         <iframe
           src={`https://www.youtube.com/embed/LFbbv8wL00k?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&showinfo=0&rel=0&loop=1&playlist=LFbbv8wL00k&modestbranding=1&playsinline=1&enablejsapi=1`}
@@ -78,11 +75,9 @@ export function HeroSection() {
           allowFullScreen
           title="Background Video"
         />
-        {/* Dark overlay with blur */}
         <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
       </div>
 
-      {/* Content */}
       <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
         <AnimatePresence mode="wait">
           <motion.div
@@ -108,7 +103,6 @@ export function HeroSection() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation Controls */}
         <div className="flex items-center justify-center gap-4 mt-4">
           <Button
             variant="ghost"
@@ -119,7 +113,6 @@ export function HeroSection() {
             <ChevronLeftIcon className="size-5" />
           </Button>
 
-          {/* Slide dots */}
           <div className="flex gap-2">
             {slides.map((_, idx) => (
               <button
@@ -145,7 +138,6 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Mute Toggle */}
       <Button
         variant="ghost"
         size="icon"

@@ -3,11 +3,7 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 
-import { cn } from "@/lib/utils"
-
-/* ------------------------------------------------------------------ */
-/*  DropdownMenu Context                                                */
-/* ------------------------------------------------------------------ */
+import { cx } from "@/lib/utils"
 
 interface DropdownMenuContextValue {
   open: boolean
@@ -20,10 +16,6 @@ const DropdownMenuContext = React.createContext<DropdownMenuContextValue>({
   setOpen: () => {},
   triggerRef: { current: null },
 })
-
-/* ------------------------------------------------------------------ */
-/*  DropdownMenu                                                        */
-/* ------------------------------------------------------------------ */
 
 function DropdownMenu({
   open: controlledOpen,
@@ -57,10 +49,6 @@ function DropdownMenu({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  DropdownMenuTrigger                                                 */
-/* ------------------------------------------------------------------ */
-
 function DropdownMenuTrigger({
   className,
   ...props
@@ -79,10 +67,6 @@ function DropdownMenuTrigger({
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  DropdownMenuContent                                                 */
-/* ------------------------------------------------------------------ */
 
 function DropdownMenuContent({
   className,
@@ -103,7 +87,6 @@ function DropdownMenuContent({
     setMounted(true)
   }, [])
 
-  // Compute position
   React.useEffect(() => {
     if (!open || !triggerRef.current) return
 
@@ -120,7 +103,6 @@ function DropdownMenuContent({
     setPosition({ top, left })
   }, [open, sideOffset, align, triggerRef])
 
-  // Click outside to close
   React.useEffect(() => {
     if (!open) return
 
@@ -163,8 +145,8 @@ function DropdownMenuContent({
     <div
       ref={contentRef}
       role="menu"
-      className={cn(
-        "bg-popover text-popover-foreground z-50 min-w-[8rem] overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md animate-in fade-in-0 zoom-in-95",
+      className={cx(
+        "bg-popup text-popup-fg z-50 min-w-[8rem] overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md animate-in fade-in-0 zoom-in-95",
         alignClass,
         className
       )}
@@ -182,10 +164,6 @@ function DropdownMenuContent({
   return createPortal(content, document.body)
 }
 
-/* ------------------------------------------------------------------ */
-/*  DropdownMenuItem                                                    */
-/* ------------------------------------------------------------------ */
-
 function DropdownMenuItem({
   className,
   inset,
@@ -201,9 +179,9 @@ function DropdownMenuItem({
   return (
     <div
       role="menuitem"
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        variant === "destructive" && "text-destructive focus:bg-destructive/10 dark:focus:bg-destructive/20 focus:text-destructive",
+      className={cx(
+        "focus:bg-tint focus:text-tint-fg relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        variant === "destructive" && "text-err focus:bg-err/10 dark:focus:bg-err/20 focus:text-err",
         inset && "pl-8",
         className
       )}
@@ -216,10 +194,6 @@ function DropdownMenuItem({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  DropdownMenuLabel                                                   */
-/* ------------------------------------------------------------------ */
-
 function DropdownMenuLabel({
   className,
   inset,
@@ -229,15 +203,11 @@ function DropdownMenuLabel({
 }) {
   return (
     <div
-      className={cn("px-2 py-1.5 text-sm font-medium", inset && "pl-8", className)}
+      className={cx("px-2 py-1.5 text-sm font-medium", inset && "pl-8", className)}
       {...props}
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  DropdownMenuSeparator                                               */
-/* ------------------------------------------------------------------ */
 
 function DropdownMenuSeparator({
   className,
@@ -246,23 +216,15 @@ function DropdownMenuSeparator({
   return (
     <div
       role="separator"
-      className={cn("bg-border -mx-1 my-1 h-px", className)}
+      className={cx("bg-border -mx-1 my-1 h-px", className)}
       {...props}
     />
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  DropdownMenuGroup                                                   */
-/* ------------------------------------------------------------------ */
-
 function DropdownMenuGroup({ className, ...props }: React.ComponentProps<"div">) {
   return <div className={className} {...props} />
 }
-
-/* ------------------------------------------------------------------ */
-/*  DropdownMenuShortcut                                                */
-/* ------------------------------------------------------------------ */
 
 function DropdownMenuShortcut({
   className,
@@ -270,8 +232,8 @@ function DropdownMenuShortcut({
 }: React.ComponentProps<"span">) {
   return (
     <span
-      className={cn(
-        "text-muted-foreground ml-auto text-xs tracking-widest",
+      className={cx(
+        "text-soft-fg ml-auto text-xs tracking-widest",
         className
       )}
       {...props}

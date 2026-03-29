@@ -2,11 +2,7 @@
 
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
-
-/* ------------------------------------------------------------------ */
-/*  Avatar Context                                                      */
-/* ------------------------------------------------------------------ */
+import { cx } from "@/lib/utils"
 
 const AvatarContext = React.createContext<{
   imageStatus: "loading" | "loaded" | "error"
@@ -15,10 +11,6 @@ const AvatarContext = React.createContext<{
   imageStatus: "loading",
   setImageStatus: () => {},
 })
-
-/* ------------------------------------------------------------------ */
-/*  Avatar                                                              */
-/* ------------------------------------------------------------------ */
 
 function Avatar({
   className,
@@ -29,7 +21,7 @@ function Avatar({
   return (
     <AvatarContext.Provider value={{ imageStatus, setImageStatus }}>
       <span
-        className={cn(
+        className={cx(
           "relative flex size-8 shrink-0 overflow-hidden rounded-full",
           className
         )}
@@ -38,10 +30,6 @@ function Avatar({
     </AvatarContext.Provider>
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  AvatarImage                                                         */
-/* ------------------------------------------------------------------ */
 
 function AvatarImage({
   className,
@@ -57,17 +45,13 @@ function AvatarImage({
     <img
       src={src}
       alt={alt}
-      className={cn("aspect-square size-full", className)}
+      className={cx("aspect-square size-full", className)}
       onError={() => setImageStatus("error")}
       onLoad={() => setImageStatus("loaded")}
       {...props}
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  AvatarFallback                                                      */
-/* ------------------------------------------------------------------ */
 
 function AvatarFallback({
   className,
@@ -76,13 +60,12 @@ function AvatarFallback({
 }: React.ComponentProps<"span">) {
   const { imageStatus } = React.useContext(AvatarContext)
 
-  // Only render fallback when image is not loaded
   if (imageStatus === "loaded") return null
 
   return (
     <span
-      className={cn(
-        "bg-muted flex size-full items-center justify-center rounded-full absolute inset-0",
+      className={cx(
+        "bg-soft flex size-full items-center justify-center rounded-full absolute inset-0",
         className
       )}
       {...props}

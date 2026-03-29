@@ -104,7 +104,6 @@ export function OwnerPanel() {
         setProducts(data);
       }
     } catch {
-      // Silent fail
     } finally {
       setLoading(false);
     }
@@ -172,7 +171,6 @@ export function OwnerPanel() {
         fetchProducts();
       }
     } catch {
-      // Silent fail
     } finally {
       setDeleting(false);
     }
@@ -244,12 +242,12 @@ export function OwnerPanel() {
             <Cog6ToothIcon className="size-5" />
             Manage Products
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-soft-fg">
             Create, edit, and manage your product catalog.
           </p>
         </div>
         <Button
-          className="hover:bg-foreground/90"
+          className="hover:bg-ink/90"
           onClick={openCreate}
         >
           <PlusIcon className="size-4 mr-2" />
@@ -257,7 +255,6 @@ export function OwnerPanel() {
         </Button>
       </div>
 
-      {/* Products Table */}
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -279,7 +276,7 @@ export function OwnerPanel() {
             <TableBody>
               {products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-soft-fg">
                     No products yet. Create your first one!
                   </TableCell>
                 </TableRow>
@@ -305,7 +302,7 @@ export function OwnerPanel() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-7 hover:bg-foreground hover:text-background"
+                          className="size-7 hover:bg-ink hover:text-page"
                           onClick={() => openEdit(product)}
                         >
                           <PencilSquareIcon className="size-3.5" />
@@ -313,7 +310,7 @@ export function OwnerPanel() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-7 hover:bg-destructive hover:text-white"
+                          className="size-7 hover:bg-err hover:text-white"
                           onClick={() => openDeleteDialog(product)}
                         >
                           <TrashIcon className="size-3.5" />
@@ -328,7 +325,6 @@ export function OwnerPanel() {
         </div>
       )}
 
-      {/* Create/Edit Wizard */}
       <Dialog
         open={wizardOpen}
         onOpenChange={(open) => {
@@ -346,20 +342,18 @@ export function OwnerPanel() {
             </DialogDescription>
           </DialogHeader>
 
-          {/* Step indicator */}
           <div className="flex gap-1 mb-2">
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <div
                 key={i}
                 className={`h-1 flex-1 rounded-full transition-colors ${
-                  i <= step ? 'bg-foreground' : 'bg-muted'
+                  i <= step ? 'bg-ink' : 'bg-soft'
                 }`}
               />
             ))}
           </div>
 
           <AnimatePresence mode="wait">
-            {/* Step 0: Images */}
             {step === 0 && (
               <motion.div
                 key="step0"
@@ -378,7 +372,7 @@ export function OwnerPanel() {
                       onChange={(e) => updateForm({ frontImage: e.target.value })}
                     />
                     {form.frontImage && (
-                      <div className="aspect-video rounded-md overflow-hidden border bg-muted">
+                      <div className="aspect-video rounded-md overflow-hidden border bg-soft">
                         <img
                           src={form.frontImage}
                           alt="Front preview"
@@ -398,7 +392,7 @@ export function OwnerPanel() {
                       onChange={(e) => updateForm({ backImage: e.target.value })}
                     />
                     {form.backImage && (
-                      <div className="aspect-video rounded-md overflow-hidden border bg-muted">
+                      <div className="aspect-video rounded-md overflow-hidden border bg-soft">
                         <img
                           src={form.backImage}
                           alt="Back preview"
@@ -414,7 +408,6 @@ export function OwnerPanel() {
               </motion.div>
             )}
 
-            {/* Step 1: Basic Info */}
             {step === 1 && (
               <motion.div
                 key="step1"
@@ -477,7 +470,6 @@ export function OwnerPanel() {
               </motion.div>
             )}
 
-            {/* Step 2: Tags & Type */}
             {step === 2 && (
               <motion.div
                 key="step2"
@@ -522,7 +514,7 @@ export function OwnerPanel() {
                 <div className="flex items-center justify-between border rounded-lg p-3">
                   <div>
                     <Label className="text-sm">Booster Exclusive</Label>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-soft-fg">
                       Only boosters can purchase this product
                     </p>
                   </div>
@@ -535,7 +527,7 @@ export function OwnerPanel() {
                   <div className="flex items-center justify-between border rounded-lg p-3">
                     <div>
                       <Label className="text-sm">Active</Label>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-soft-fg">
                         Product is visible and purchasable
                       </p>
                     </div>
@@ -548,7 +540,6 @@ export function OwnerPanel() {
               </motion.div>
             )}
 
-            {/* Step 3: Announce & Summary */}
             {step === 3 && (
               <motion.div
                 key="step3"
@@ -564,7 +555,7 @@ export function OwnerPanel() {
                     <MegaphoneIcon className="size-4" />
                     <div>
                       <Label className="text-sm">Announce Product</Label>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-soft-fg">
                         Post to Discord and feature on the landing page
                       </p>
                     </div>
@@ -575,27 +566,26 @@ export function OwnerPanel() {
                   />
                 </div>
 
-                {/* Summary */}
                 <div className="border rounded-lg p-4 space-y-2 text-sm">
                   <h4 className="font-semibold mb-3">Summary</h4>
                   <div className="grid grid-cols-2 gap-y-1.5 gap-x-4">
-                    <span className="text-muted-foreground">Name:</span>
+                    <span className="text-soft-fg">Name:</span>
                     <span className="font-medium">{form.name || '—'}</span>
-                    <span className="text-muted-foreground">Price:</span>
+                    <span className="text-soft-fg">Price:</span>
                     <span className="font-medium">R${form.price}</span>
-                    <span className="text-muted-foreground">Type:</span>
+                    <span className="text-soft-fg">Type:</span>
                     <span className="font-medium capitalize">{form.type}</span>
-                    <span className="text-muted-foreground">Maker:</span>
+                    <span className="text-soft-fg">Maker:</span>
                     <span className="font-medium">{form.maker || '—'}</span>
-                    <span className="text-muted-foreground">Tags:</span>
+                    <span className="text-soft-fg">Tags:</span>
                     <span className="font-medium">
                       {form.tags.length > 0 ? form.tags.join(', ') : 'None'}
                     </span>
-                    <span className="text-muted-foreground">Booster Exclusive:</span>
+                    <span className="text-soft-fg">Booster Exclusive:</span>
                     <span className="font-medium">{form.boosterExclusive ? 'Yes' : 'No'}</span>
-                    <span className="text-muted-foreground">Active:</span>
+                    <span className="text-soft-fg">Active:</span>
                     <span className="font-medium">{form.active ? 'Yes' : 'No'}</span>
-                    <span className="text-muted-foreground">Announce:</span>
+                    <span className="text-soft-fg">Announce:</span>
                     <span className="font-medium">{form.announce ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
@@ -622,7 +612,7 @@ export function OwnerPanel() {
                 <Button
                   onClick={handleSave}
                   disabled={saving || !form.name}
-                  className="hover:bg-foreground/90"
+                  className="hover:bg-ink/90"
                 >
                   {saving && <ArrowPathIcon className="size-4 animate-spin" />}
                   {saving
@@ -637,7 +627,6 @@ export function OwnerPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={!!deleteTarget}
         onOpenChange={(open) => {
@@ -646,7 +635,7 @@ export function OwnerPanel() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
+            <DialogTitle className="flex items-center gap-2 text-err">
               <TrashIcon className="size-5" />
               Deactivate Product
             </DialogTitle>
@@ -659,15 +648,13 @@ export function OwnerPanel() {
 
           {deleteTarget && (
             <div className="space-y-4">
-              {/* Product info */}
-              <div className="border rounded-lg p-3 bg-muted/50">
+              <div className="border rounded-lg p-3 bg-soft/50">
                 <p className="text-sm font-medium">{deleteTarget.name}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-soft-fg">
                   R${deleteTarget.price} · {deleteTarget.type}
                 </p>
               </div>
 
-              {/* Step 0: Type product name */}
               {deleteStep === 0 && (
                 <div className="space-y-2">
                   <Label htmlFor="delete-name-input">
@@ -685,12 +672,11 @@ export function OwnerPanel() {
                   />
                   {deleteNameInput.trim().length > 0 &&
                     deleteNameInput.trim() !== deleteTarget.name.trim() && (
-                      <p className="text-xs text-destructive">Name does not match.</p>
+                      <p className="text-xs text-err">Name does not match.</p>
                     )}
                 </div>
               )}
 
-              {/* Step 1: Type CONFIRM */}
               {deleteStep === 1 && (
                 <div className="space-y-2">
                   <Label htmlFor="delete-confirm-input">

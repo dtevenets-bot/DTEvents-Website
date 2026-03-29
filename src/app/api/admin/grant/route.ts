@@ -12,10 +12,6 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
   user: 1,
 };
 
-// ============================================================
-// POST /api/admin/grant - Grant a product to a user (admin+)
-// ============================================================
-
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -41,7 +37,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify product exists and is active
     const productSnapshot = await db.ref(`products/${productId}`).once('value');
     if (!productSnapshot.exists()) {
       return NextResponse.json(
@@ -59,7 +54,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if user already owns this product (non-revoked)
     const existingSnapshot = await db
       .ref('userProducts')
       .orderByChild('userId')
@@ -82,7 +76,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Grant the product
     const userProductRef = db.ref('userProducts').push();
     const userProductId = userProductRef.key!;
 
@@ -96,7 +89,6 @@ export async function POST(req: NextRequest) {
       revokedBy: null,
     });
 
-    // Create audit log
     const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {
       action: 'grant',

@@ -3,11 +3,7 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 
-import { cn } from "@/lib/utils"
-
-/* ------------------------------------------------------------------ */
-/*  Sheet Context                                                       */
-/* ------------------------------------------------------------------ */
+import { cx } from "@/lib/utils"
 
 interface SheetContextValue {
   open: boolean
@@ -50,10 +46,6 @@ function Sheet({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  SheetTrigger                                                        */
-/* ------------------------------------------------------------------ */
-
 function SheetTrigger({
   children,
   ...props
@@ -65,10 +57,6 @@ function SheetTrigger({
     </button>
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  SheetClose                                                          */
-/* ------------------------------------------------------------------ */
 
 function SheetClose({
   className,
@@ -85,10 +73,6 @@ function SheetClose({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  SheetContent                                                        */
-/* ------------------------------------------------------------------ */
-
 function SheetContent({
   className,
   children,
@@ -104,7 +88,6 @@ function SheetContent({
     setMounted(true)
   }, [])
 
-  // Escape to close
   React.useEffect(() => {
     if (!open) return
     const handleKey = (e: KeyboardEvent) => {
@@ -137,21 +120,19 @@ function SheetContent({
 
   const content = (
     <div className="fixed inset-0 z-50">
-      {/* Overlay */}
       <div
-        className={cn(
+        className={cx(
           "fixed inset-0 z-50 bg-black/50 transition-opacity duration-300",
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         onClick={() => setOpen(false)}
         aria-hidden="true"
       />
-      {/* Panel */}
       <div
         role="dialog"
         aria-modal
-        className={cn(
-          "bg-background fixed z-50 flex flex-col gap-4 p-4 shadow-lg transition-transform duration-300 ease-in-out",
+        className={cx(
+          "bg-page fixed z-50 flex flex-col gap-4 p-4 shadow-lg transition-transform duration-300 ease-in-out",
           sideClasses[side],
           className
         )}
@@ -163,7 +144,7 @@ function SheetContent({
         {children}
         <button
           type="button"
-          className="ring-offset-background focus:ring-ring absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
+          className="ring-offset-page focus:ring-focus-ring absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
           onClick={() => setOpen(false)}
           aria-label="Close"
         >
@@ -190,48 +171,32 @@ function SheetContent({
   return createPortal(content, document.body)
 }
 
-/* ------------------------------------------------------------------ */
-/*  SheetHeader                                                         */
-/* ------------------------------------------------------------------ */
-
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-1.5 p-4", className)}
+      className={cx("flex flex-col gap-1.5 p-4", className)}
       {...props}
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  SheetFooter                                                         */
-/* ------------------------------------------------------------------ */
 
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("mt-auto flex flex-col gap-2 p-4", className)}
+      className={cx("mt-auto flex flex-col gap-2 p-4", className)}
       {...props}
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  SheetTitle                                                          */
-/* ------------------------------------------------------------------ */
 
 function SheetTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
     <h2
-      className={cn("text-foreground font-semibold", className)}
+      className={cx("text-ink font-semibold", className)}
       {...props}
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  SheetDescription                                                    */
-/* ------------------------------------------------------------------ */
 
 function SheetDescription({
   className,
@@ -239,7 +204,7 @@ function SheetDescription({
 }: React.ComponentProps<"p">) {
   return (
     <p
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cx("text-soft-fg text-sm", className)}
       {...props}
     />
   )

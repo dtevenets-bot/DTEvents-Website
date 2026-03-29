@@ -11,10 +11,6 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
   user: 1,
 };
 
-// ============================================================
-// GET /api/admin/audit - Fetch audit logs (admin+)
-// ============================================================
-
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -54,24 +50,20 @@ export async function GET(req: NextRequest) {
       createdAt: data.createdAt ?? Date.now(),
     }));
 
-    // Filter by action
     if (action) {
       logs = logs.filter((log) => log.action === action);
     }
 
-    // Filter by target user
     if (targetUserId) {
       logs = logs.filter((log) => log.targetUserId === targetUserId);
     }
 
-    // Sort by newest first
     logs.sort((a, b) => {
       const aTime = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt as string).getTime();
       const bTime = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt as string).getTime();
       return bTime - aTime;
     });
 
-    // Apply limit
     if (limit > 0) {
       logs = logs.slice(0, limit);
     }

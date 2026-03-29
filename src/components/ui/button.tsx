@@ -1,61 +1,36 @@
 import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
+import { cx } from "@/lib/utils"
 
-import { cn } from "@/lib/utils"
+const baseClasses = "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-focus-ring focus-visible:ring-focus-ring/50 focus-visible:ring-[3px] aria-invalid:ring-err/20 dark:aria-invalid:ring-err/40 aria-invalid:border-err"
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-  {
-    variants: {
-      variant: {
-        default:
-          "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
-        ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
+const sizeMap: Record<string, string> = {
+  default: "h-9 px-4 py-2 has-[>svg]:px-3",
+  sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+  lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+  icon: "size-9",
+}
 
-function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
-  if (asChild && React.isValidElement(props.children)) {
-    return React.cloneElement(props.children as React.ReactElement<Record<string, unknown>>, {
-      className: cn(buttonVariants({ variant, size, className }), (props.children as React.ReactElement<Record<string, unknown>>).props.className),
-    })
-  }
+const variantMap: Record<string, string> = {
+  default: "bg-brand text-brand-fg shadow-xs hover:bg-brand/90",
+  destructive: "bg-err text-white shadow-xs hover:bg-err/90 focus-visible:ring-err/20 dark:focus-visible:ring-err/40 dark:bg-err/60",
+  outline: "border bg-page shadow-xs hover:bg-tint hover:text-tint-fg dark:bg-field/30 dark:border-field dark:hover:bg-field/50",
+  secondary: "bg-alt text-alt-fg shadow-xs hover:bg-alt/80",
+  ghost: "hover:bg-tint hover:text-tint-fg dark:hover:bg-tint/50",
+  link: "text-brand underline-offset-4 hover:underline",
+}
 
+interface ButtonProps extends React.ComponentProps<"button"> {
+  variant?: keyof typeof variantMap
+  size?: keyof typeof sizeMap
+}
+
+function Button({ className, variant = "default", size = "default", ...props }: ButtonProps) {
   return (
     <button
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cx(baseClasses, variantMap[variant], sizeMap[size], className)}
       {...props}
     />
   )
 }
 
-export { Button, buttonVariants }
+export { Button }

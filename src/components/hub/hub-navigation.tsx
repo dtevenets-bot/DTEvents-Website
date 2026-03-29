@@ -69,20 +69,18 @@ export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigatio
   };
 
   return (
-    <div className="border-b bg-background sticky top-0 z-40">
+    <div className="border-b bg-page sticky top-0 z-40">
       <div className="container mx-auto flex items-center justify-between px-4 h-14">
-        {/* Left side: Logo + Tabs */}
         <div className="flex items-center gap-1">
           <span className="font-bold text-lg mr-3 hidden sm:block">DT Events</span>
 
-          {/* Desktop tabs */}
           <nav className="hidden md:flex items-center gap-1">
             {visibleTabs.map((tab) => (
               <Button
                 key={tab.id}
                 variant="ghost"
                 size="sm"
-                className={`gap-1.5 ${activeTab === tab.id ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'hover:bg-accent hover:text-accent-foreground'}`}
+                className={`gap-1.5 ${activeTab === tab.id ? 'bg-ink text-page hover:bg-ink/90 hover:text-page' : 'hover:bg-tint hover:text-tint-fg'}`}
                 onClick={() => onTabChange(tab.id)}
               >
                 <tab.icon className="size-3.5" />
@@ -91,12 +89,11 @@ export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigatio
             ))}
           </nav>
 
-          {/* Mobile hamburger */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden hover:bg-accent hover:text-accent-foreground">
+            <SheetTrigger>
+              <button className="inline-flex items-center justify-center size-9 rounded-md hover:bg-tint hover:text-tint-fg transition-colors md:hidden">
                 <Bars3Icon className="size-4" />
-              </Button>
+              </button>
             </SheetTrigger>
             <SheetContent side="left" className="w-64">
               <SheetHeader>
@@ -107,7 +104,7 @@ export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigatio
                   <Button
                     key={tab.id}
                     variant={activeTab === tab.id ? 'secondary' : 'ghost'}
-                    className={`justify-start gap-2 ${activeTab === tab.id ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'hover:bg-accent hover:text-accent-foreground'}`}
+                    className={`justify-start gap-2 ${activeTab === tab.id ? 'bg-ink text-page hover:bg-ink/90 hover:text-page' : 'hover:bg-tint hover:text-tint-fg'}`}
                     onClick={() => {
                       onTabChange(tab.id);
                       setMobileOpen(false);
@@ -122,7 +119,7 @@ export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigatio
 
                 <Button
                   variant="ghost"
-                  className="justify-start gap-2 hover:bg-accent hover:text-accent-foreground"
+                  className="justify-start gap-2 hover:bg-tint hover:text-tint-fg"
                   onClick={() => {
                     setMobileOpen(false);
                     onGoHome?.();
@@ -134,7 +131,7 @@ export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigatio
 
                 <Button
                   variant="ghost"
-                  className="justify-start gap-2 text-destructive hover:text-destructive"
+                  className="justify-start gap-2 text-err hover:text-err"
                   onClick={() => {
                     setMobileOpen(false);
                     handleSignOut();
@@ -149,37 +146,33 @@ export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigatio
           </Sheet>
         </div>
 
-        {/* Right side: Cart + User + Home + Logout */}
         <div className="flex items-center gap-1">
-          {/* Home button (desktop) */}
           <Button
             variant="ghost"
             size="icon"
-            className="hidden sm:flex hover:bg-accent hover:text-accent-foreground"
+            className="hidden sm:flex hover:bg-tint hover:text-tint-fg"
             onClick={onGoHome}
             title="Back to landing page"
           >
             <HomeIcon className="size-4" />
           </Button>
 
-          {/* Cart */}
           <Button
             variant="ghost"
             size="icon"
-            className="relative hover:bg-accent hover:text-accent-foreground"
+            className="relative hover:bg-tint hover:text-tint-fg"
             onClick={() => {
               window.dispatchEvent(new CustomEvent('open-cart'));
             }}
           >
             <ShoppingCartIcon className="size-4" />
             {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 size-4 bg-foreground text-background rounded-full text-[10px] flex items-center justify-center font-bold">
+              <span className="absolute -top-1 -right-1 size-4 bg-ink text-page rounded-full text-[10px] flex items-center justify-center font-bold">
                 {itemCount > 99 ? '99+' : itemCount}
               </span>
             )}
           </Button>
 
-          {/* User avatar + name */}
           <div className="hidden lg:flex items-center gap-2 px-2">
             <Avatar className="size-7">
               {displayAvatar && <AvatarImage src={displayAvatar} alt={displayName} />}
@@ -195,11 +188,10 @@ export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigatio
             </div>
           </div>
 
-          {/* Sign Out (desktop) */}
           <Button
             variant="ghost"
             size="icon"
-            className="hover:bg-destructive hover:text-white"
+            className="hover:bg-err hover:text-white"
             onClick={handleSignOut}
             disabled={signingOut}
             title="Sign out"

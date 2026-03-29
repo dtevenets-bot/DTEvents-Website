@@ -7,10 +7,9 @@ import { BoltIcon } from '@heroicons/react/24/outline';
 export function BoosterZone() {
   return (
     <div>
-      {/* Banner */}
-      <div className="mb-6 p-4 border border-dashed rounded-lg bg-foreground text-background">
+      <div className="mb-6 p-4 border border-dashed rounded-lg bg-ink text-page">
         <div className="flex items-center gap-3">
-          <div className="size-10 rounded-full bg-background text-foreground flex items-center justify-center">
+          <div className="size-10 rounded-full bg-page text-ink flex items-center justify-center">
             <BoltIcon className="size-5" />
           </div>
           <div>

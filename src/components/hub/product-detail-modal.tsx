@@ -55,8 +55,7 @@ export function ProductDetailModal({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Image Viewer */}
-        <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
+        <div className="relative aspect-video bg-soft rounded-lg overflow-hidden">
           {currentImage ? (
             <img
               src={currentImage}
@@ -64,18 +63,17 @@ export function ProductDetailModal({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            <div className="w-full h-full flex items-center justify-center text-soft-fg">
               No image available
             </div>
           )}
 
-          {/* Front/Back toggle */}
           {product.images?.front && product.images?.back && (
             <div className="absolute bottom-2 right-2 flex gap-1">
               <Button
                 variant="secondary"
                 size="sm"
-                className={`text-xs h-7 ${!showBack ? 'bg-foreground text-background' : ''}`}
+                className={`text-xs h-7 ${!showBack ? 'bg-ink text-page' : ''}`}
                 onClick={() => setShowBack(false)}
               >
                 Front
@@ -83,7 +81,7 @@ export function ProductDetailModal({
               <Button
                 variant="secondary"
                 size="sm"
-                className={`text-xs h-7 ${showBack ? 'bg-foreground text-background' : ''}`}
+                className={`text-xs h-7 ${showBack ? 'bg-ink text-page' : ''}`}
                 onClick={() => setShowBack(true)}
               >
                 Back
@@ -91,7 +89,6 @@ export function ProductDetailModal({
             </div>
           )}
 
-          {/* Arrow nav */}
           {product.images?.front && product.images?.back && (
             <>
               <button
@@ -110,12 +107,11 @@ export function ProductDetailModal({
           )}
         </div>
 
-        {/* Info */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-2xl font-bold">R${product.price}</span>
             {product.maker && (
-              <span className="text-sm text-muted-foreground">by {product.maker}</span>
+              <span className="text-sm text-soft-fg">by {product.maker}</span>
             )}
           </div>
 
@@ -133,7 +129,7 @@ export function ProductDetailModal({
           )}
 
           <Button
-            className="w-full hover:bg-foreground/90"
+            className="w-full hover:bg-ink/90"
             onClick={handleAddToCart}
           >
             <ShoppingCartIcon className="size-4 mr-2" />

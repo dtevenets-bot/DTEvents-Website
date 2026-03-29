@@ -9,10 +9,6 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-// ============================================================
-// GET /api/products/[id] - Get a single product
-// ============================================================
-
 export async function GET(_req: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
@@ -38,10 +34,6 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
   }
 }
 
-// ============================================================
-// PUT /api/products/[id] - Update a product (owner only)
-// ============================================================
-
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
@@ -55,7 +47,6 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     const { id } = await params;
 
-    // Check product exists
     const existingSnapshot = await db.ref(`products/${id}`).once('value');
     if (!existingSnapshot.exists()) {
       return NextResponse.json(
@@ -78,7 +69,6 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       boosterExclusive,
     } = body;
 
-    // Build update object with only provided fields
     const updates: Record<string, unknown> = {};
 
     if (name !== undefined) updates.name = name;
@@ -94,7 +84,6 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     await db.ref(`products/${id}`).update(updates);
 
-    // Create audit log
     const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {
       action: 'edit_product',
@@ -106,7 +95,6 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     };
     await auditRef.set(auditLog);
 
-    // Return updated product
     const updatedSnapshot = await db.ref(`products/${id}`).once('value');
     const updatedProduct = parseProduct(id, updatedSnapshot.val() as Record<string, unknown>);
 
@@ -119,10 +107,6 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     );
   }
 }
-
-// ============================================================
-// DELETE /api/products/[id] - Soft-delete a product (owner only)
-// ============================================================
 
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
   try {
@@ -137,7 +121,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
 
     const { id } = await params;
 
-    // Check product exists
     const existingSnapshot = await db.ref(`products/${id}`).once('value');
     if (!existingSnapshot.exists()) {
       return NextResponse.json(
@@ -149,14 +132,12 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     const existingData = existingSnapshot.val() as Record<string, unknown>;
     const productName = (existingData.name as string) || id;
 
-    // Soft-delete: set active = false
     await db.ref(`products/${id}`).update({
       active: false,
       deletedAt: Date.now(),
       deletedBy: session.user.discordId,
     });
 
-    // Clear announcedProduct if this product was the announced one
     try {
       const announcedSnapshot = await db.ref('siteConfig/announcedProduct').once('value');
       if (announcedSnapshot.exists()) {
@@ -169,7 +150,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
       console.warn(`[DELETE /api/products/${id}] Failed to clear announcedProduct:`, announceErr);
     }
 
-    // Create audit log
     const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {
       action: 'delete_product',

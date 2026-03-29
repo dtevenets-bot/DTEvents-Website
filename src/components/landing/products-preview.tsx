@@ -22,7 +22,6 @@ export function ProductsPreview() {
           setProducts(data.slice(0, 4));
         }
       } catch {
-        // Silent fail
       } finally {
         setLoading(false);
       }
@@ -31,11 +30,11 @@ export function ProductsPreview() {
   }, []);
 
   return (
-    <section id="products" className="py-20 px-4 bg-muted/30">
+    <section id="products" className="py-20 px-4 bg-soft/30">
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-3">Featured Products</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-soft-fg max-w-2xl mx-auto">
             Browse our latest and most popular products.
           </p>
         </div>
@@ -54,7 +53,7 @@ export function ProductsPreview() {
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="text-center py-12 text-soft-fg">
             <ShoppingBagIcon className="size-12 mx-auto mb-4 opacity-40" />
             <p>No products available yet. Check back soon!</p>
           </div>
@@ -68,8 +67,8 @@ export function ProductsPreview() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: idx * 0.1 }}
                 >
-                  <Card className="overflow-hidden group border transition-colors hover:bg-foreground hover:text-background py-0">
-                    <div className="aspect-square bg-muted overflow-hidden">
+                  <Card className="overflow-hidden group border transition-colors hover:bg-ink hover:text-page py-0">
+                    <div className="aspect-square bg-soft overflow-hidden">
                       {product.images?.front ? (
                         <img
                           src={product.images.front}
@@ -91,7 +90,7 @@ export function ProductsPreview() {
                             <Badge
                               key={tag}
                               variant="outline"
-                              className="text-[10px] group-hover:border-background/30 group-hover:text-background"
+                              className="text-[10px] group-hover:border-page/30 group-hover:text-page"
                             >
                               {tag}
                             </Badge>
@@ -107,7 +106,7 @@ export function ProductsPreview() {
             <div className="text-center mt-8">
               <Button
                 variant="outline"
-                className="group hover:bg-foreground hover:text-background"
+                className="group hover:bg-ink hover:text-page"
                 onClick={() => {
                   window.dispatchEvent(new CustomEvent('open-login'));
                 }}

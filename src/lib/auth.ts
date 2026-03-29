@@ -3,10 +3,6 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { db } from '@/lib/firebase';
 import type { UserRole } from '@/types';
 
-// ============================================================
-// Extend next-auth types
-// ============================================================
-
 declare module 'next-auth' {
   interface Session {
     user: {
@@ -39,10 +35,6 @@ declare module 'next-auth/jwt' {
   }
 }
 
-// ============================================================
-// Auth Options
-// ============================================================
-
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -66,19 +58,15 @@ export const authOptions: NextAuthOptions = {
 
         const data = snapshot.val();
 
-        // Check expiry (5 minutes)
         const now = Date.now();
         const expiresAt = data.expiresAt as number;
         if (now > expiresAt) {
-          // Delete expired code
           await codeRef.remove();
           return null;
         }
 
-        // Delete the code after successful use (one-time use)
         await codeRef.remove();
 
-        // Return user data stored in the verification code
         return {
           id: data.discordId || data.robloxUserId || 'unknown',
           discordId: data.discordId || '',
@@ -93,7 +81,7 @@ export const authOptions: NextAuthOptions = {
 
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
 
   callbacks: {

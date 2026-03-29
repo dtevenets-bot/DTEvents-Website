@@ -12,10 +12,6 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
   user: 1,
 };
 
-// ============================================================
-// POST /api/admin/revoke - Revoke a product from a user (admin+)
-// ============================================================
-
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -41,7 +37,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify the user product exists and is not already revoked
     const snapshot = await db.ref(`userProducts/${userProductId}`).once('value');
 
     if (!snapshot.exists()) {
@@ -64,7 +59,6 @@ export async function POST(req: NextRequest) {
     const targetUserId = (existingData.userId as string) || 'Unknown';
     const targetProductId = (existingData.productId as string) || '';
 
-    // Get product info for context
     let productInfo = productName;
     if (targetProductId) {
       const productSnapshot = await db.ref(`products/${targetProductId}`).once('value');
@@ -74,13 +68,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Soft-revoke by setting revokedAt and revokedBy
     await db.ref(`userProducts/${userProductId}`).update({
       revokedAt: Date.now(),
       revokedBy: session.user.discordId,
     });
 
-    // Create audit log
     const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {
       action: 'revoke',

@@ -3,11 +3,7 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 
-import { cn } from "@/lib/utils"
-
-/* ------------------------------------------------------------------ */
-/*  Select Context                                                      */
-/* ------------------------------------------------------------------ */
+import { cx } from "@/lib/utils"
 
 interface SelectContextValue {
   value?: string
@@ -31,10 +27,6 @@ let selectIdCounter = 0
 function generateSelectId() {
   return `select-content-${++selectIdCounter}`
 }
-
-/* ------------------------------------------------------------------ */
-/*  Select                                                              */
-/* ------------------------------------------------------------------ */
 
 function Select({
   value,
@@ -79,10 +71,6 @@ function Select({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  SelectTrigger                                                       */
-/* ------------------------------------------------------------------ */
-
 function SelectTrigger({
   className,
   size = "default",
@@ -101,8 +89,8 @@ function SelectTrigger({
       aria-expanded={open}
       aria-controls={contentId}
       onClick={() => setOpen(!open)}
-      className={cn(
-        "border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 dark:hover:bg-input/50 flex w-fit items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 h-9",
+      className={cx(
+        "border-field data-[placeholder]:text-soft-fg [&_svg:not([class*='text-'])]:text-soft-fg focus-visible:border-focus-ring focus-visible:ring-focus-ring/50 aria-invalid:ring-err/20 dark:aria-invalid:ring-err/40 aria-invalid:border-err dark:bg-field/30 dark:hover:bg-field/50 flex w-fit items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 h-9",
         size === "sm" && "h-8",
         className
       )}
@@ -127,10 +115,6 @@ function SelectTrigger({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  SelectValue                                                         */
-/* ------------------------------------------------------------------ */
-
 function SelectValue({
   placeholder,
   className,
@@ -140,15 +124,11 @@ function SelectValue({
 }) {
   const { value } = React.useContext(SelectContext)
   return (
-    <span className={cn("flex items-center gap-2 line-clamp-1", className)}>
+    <span className={cx("flex items-center gap-2 line-clamp-1", className)}>
       {value ? value : placeholder}
     </span>
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  SelectContent                                                       */
-/* ------------------------------------------------------------------ */
 
 function SelectContent({
   className,
@@ -173,7 +153,6 @@ function SelectContent({
     setPos({ top: rect.bottom + 4, left: rect.left, width: rect.width })
   }, [open, triggerRef])
 
-  // Click outside
   React.useEffect(() => {
     if (!open) return
     const handleClick = (e: MouseEvent) => {
@@ -206,8 +185,8 @@ function SelectContent({
       ref={contentRef}
       id={contentId}
       role="listbox"
-      className={cn(
-        "bg-popover text-popover-foreground relative z-50 max-h-96 min-w-[8rem] overflow-x-hidden overflow-y-auto rounded-md border shadow-md animate-in fade-in-0 zoom-in-95 p-1",
+      className={cx(
+        "bg-popup text-popup-fg relative z-50 max-h-96 min-w-[8rem] overflow-x-hidden overflow-y-auto rounded-md border shadow-md animate-in fade-in-0 zoom-in-95 p-1",
         className
       )}
       style={{
@@ -225,17 +204,9 @@ function SelectContent({
   return createPortal(content, document.body)
 }
 
-/* ------------------------------------------------------------------ */
-/*  SelectGroup                                                         */
-/* ------------------------------------------------------------------ */
-
 function SelectGroup({ className, ...props }: React.ComponentProps<"div">) {
   return <div className={className} role="group" {...props} />
 }
-
-/* ------------------------------------------------------------------ */
-/*  SelectItem                                                          */
-/* ------------------------------------------------------------------ */
 
 function SelectItem({
   className,
@@ -250,9 +221,9 @@ function SelectItem({
     <div
       role="option"
       aria-selected={isSelected}
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        isSelected && "bg-accent text-accent-foreground",
+      className={cx(
+        "focus:bg-tint focus:text-tint-fg relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        isSelected && "bg-tint text-tint-fg",
         className
       )}
       onClick={() => ctx.onValueChange?.(itemValue)}
@@ -281,25 +252,17 @@ function SelectItem({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  SelectLabel                                                         */
-/* ------------------------------------------------------------------ */
-
 function SelectLabel({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("text-muted-foreground px-2 py-1.5 text-xs", className)}
+      className={cx("text-soft-fg px-2 py-1.5 text-xs", className)}
       {...props}
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  SelectSeparator                                                     */
-/* ------------------------------------------------------------------ */
 
 function SelectSeparator({
   className,
@@ -308,7 +271,7 @@ function SelectSeparator({
   return (
     <div
       role="separator"
-      className={cn("bg-border pointer-events-none -mx-1 my-1 h-px", className)}
+      className={cx("bg-border pointer-events-none -mx-1 my-1 h-px", className)}
       {...props}
     />
   )

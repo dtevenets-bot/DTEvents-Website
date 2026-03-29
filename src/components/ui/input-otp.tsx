@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
+import { cx } from "@/lib/utils"
 
 function InputOTP({
   maxLength = 6,
@@ -36,7 +36,6 @@ function InputOTP({
 
   const handleInput = (index: number, char: string) => {
     if (char.length > 1) {
-      // Handle paste - take only first character
       char = char[0]
     }
     const newValue = value.split("")
@@ -44,7 +43,6 @@ function InputOTP({
     const result = newValue.join("")
     setValue(result)
 
-    // Auto-focus next
     if (char && index < maxLength - 1) {
       inputRefs.current[index + 1]?.focus()
     }
@@ -76,7 +74,7 @@ function InputOTP({
 
   return (
     <div
-      className={cn("flex items-center gap-2 has-disabled:opacity-50 disabled:cursor-not-allowed", containerClassName)}
+      className={cx("flex items-center gap-2 has-disabled:opacity-50 disabled:cursor-not-allowed", containerClassName)}
       {...props}
     >
       {Array.from({ length: maxLength }, (_, index) => (
@@ -84,13 +82,13 @@ function InputOTP({
           key={index}
           ref={(el) => { inputRefs.current[index] = el }}
           type="text"
-          inputMode="numeric"
+          inputMode="text"
           maxLength={1}
           value={value[index] ?? ""}
           disabled={disabled}
           aria-label={`Digit ${index + 1}`}
-          className={cn(
-            "border-input dark:bg-input/30 border-input relative flex h-9 w-9 items-center justify-center border-y border-r text-center text-sm shadow-xs transition-all outline-none first:rounded-l-md first:border-l last:rounded-r-md focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+          className={cx(
+            "border-field dark:bg-field/30 border-field relative flex h-9 w-9 items-center justify-center border-y border-r text-center text-sm shadow-xs transition-all outline-none first:rounded-l-md first:border-l last:rounded-r-md focus-visible:border-focus-ring focus-visible:ring-focus-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
           onChange={(e) => handleInput(index, e.target.value.replace(/[^0-9]/g, ""))}
@@ -111,22 +109,14 @@ function InputOTP({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  InputOTPGroup (structural only)                                     */
-/* ------------------------------------------------------------------ */
-
 function InputOTPGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex items-center", className)}
+      className={cx("flex items-center", className)}
       {...props}
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  InputOTPSlot (for use with OTPInputContext from input-otp package)  */
-/* ------------------------------------------------------------------ */
 
 function InputOTPSlot({
   index,
@@ -135,18 +125,14 @@ function InputOTPSlot({
 }: React.ComponentProps<"div"> & { index: number }) {
   return (
     <div
-      className={cn(
-        "border-input dark:bg-input/30 relative flex h-9 w-9 items-center justify-center border-y border-r text-sm shadow-xs transition-all outline-none first:rounded-l-md first:border-l last:rounded-r-md",
+      className={cx(
+        "border-field dark:bg-field/30 relative flex h-9 w-9 items-center justify-center border-y border-r text-sm shadow-xs transition-all outline-none first:rounded-l-md first:border-l last:rounded-r-md",
         className
       )}
       {...props}
     />
   )
 }
-
-/* ------------------------------------------------------------------ */
-/*  InputOTPSeparator                                                   */
-/* ------------------------------------------------------------------ */
 
 function InputOTPSeparator({ className, ...props }: React.ComponentProps<"div">) {
   return (

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
+import { cx } from "@/lib/utils"
 
 function Switch({
   className,
@@ -41,9 +41,9 @@ function Switch({
       aria-checked={isChecked}
       disabled={disabled}
       id={id}
-      className={cn(
-        "peer focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
-        isChecked ? "bg-primary" : "bg-input",
+      className={cx(
+        "peer focus-visible:border-focus-ring focus-visible:ring-focus-ring/50 dark:data-[state=unchecked]:bg-field/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+        isChecked ? "bg-brand" : "bg-field",
         className
       )}
       onClick={handleClick}
@@ -51,14 +51,14 @@ function Switch({
       {...props}
     >
       <span
-        className={cn(
-          "bg-background pointer-events-none block size-4 rounded-full ring-0 transition-transform",
+        className={cx(
+          "bg-page pointer-events-none block size-4 rounded-full ring-0 transition-transform",
           isChecked
             ? "translate-x-[calc(100%-2px)]"
             : "translate-x-0",
           isChecked
-            ? "dark:bg-primary-foreground"
-            : "dark:bg-foreground"
+            ? "dark:bg-brand-fg"
+            : "dark:bg-ink"
         )}
       />
     </button>

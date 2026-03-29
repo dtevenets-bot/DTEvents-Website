@@ -90,10 +90,8 @@ export default function Home() {
   const { data: session, status } = useSession();
   const { setAuth, setLoading, logout } = useAuthStore();
 
-  // Tracks whether user manually chose to visit the landing page
   const [userPickedLanding, setUserPickedLanding] = useState(false);
 
-  // Sync session to auth-store
   useEffect(() => {
     if (status === 'loading') {
       setLoading(true);
@@ -114,7 +112,6 @@ export default function Home() {
     }
   }, [session, status, setAuth, setLoading, logout]);
 
-  // Derive which view to show
   const showLanding = useMemo(() => {
     if (status === 'loading') return false;
     if (!session?.user) return true;

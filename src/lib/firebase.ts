@@ -1,10 +1,6 @@
 import admin from 'firebase-admin';
 import type { Product, UserProduct } from '@/types';
 
-// ============================================================
-// Environment Validation
-// ============================================================
-
 const requiredEnvVars = [
   'FIREBASE_PROJECT_ID',
   'FIREBASE_CLIENT_EMAIL',
@@ -23,10 +19,6 @@ function validateEnv(): void {
     );
   }
 }
-
-// ============================================================
-// Firebase Admin Init (singleton)
-// ============================================================
 
 let _db: admin.database.Database | null = null;
 
@@ -54,14 +46,6 @@ function getDb(): admin.database.Database {
 
 export const db = getDb();
 
-// ============================================================
-// Helper Functions
-// ============================================================
-
-/**
- * Parse a raw Firebase snapshot value into a Product.
- * Ensures all fields have sensible defaults.
- */
 export function parseProduct(
   id: string,
   data: Record<string, unknown>
@@ -89,9 +73,6 @@ export function parseProduct(
   };
 }
 
-/**
- * Parse a raw Firebase snapshot value into a UserProduct.
- */
 export function parseUserProduct(
   id: string,
   data: Record<string, unknown>

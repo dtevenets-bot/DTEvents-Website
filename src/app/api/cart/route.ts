@@ -4,10 +4,6 @@ import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/firebase';
 import type { CartItem, TempCart } from '@/types';
 
-// ============================================================
-// POST /api/cart - Save cart to Firebase
-// ============================================================
-
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -29,7 +25,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate cart items
     for (const item of items) {
       if (!item.productId || typeof item.price !== 'number' || typeof item.quantity !== 'number') {
         return NextResponse.json(
@@ -44,7 +39,7 @@ export async function POST(req: NextRequest) {
       robloxUserId: session.user.robloxUserId,
       items,
       createdAt: now,
-      expiresAt: now + 24 * 60 * 60 * 1000, // 24 hours
+      expiresAt: now + 24 * 60 * 60 * 1000,
     };
 
     await db
@@ -63,10 +58,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
-// ============================================================
-// GET /api/cart - Fetch user's cart
-// ============================================================
 
 export async function GET() {
   try {
@@ -89,9 +80,7 @@ export async function GET() {
 
     const cart = snapshot.val() as TempCart;
 
-    // Check if cart has expired
     if (Date.now() > cart.expiresAt) {
-      // Clean up expired cart
       await db
         .ref(`tempCarts/${session.user.robloxUserId}`)
         .remove();

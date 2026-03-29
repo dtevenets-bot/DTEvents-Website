@@ -38,7 +38,7 @@ export function UserMenu() {
     return (
       <Button
         variant="ghost"
-        className="hover:bg-foreground hover:text-background"
+        className="hover:bg-ink hover:text-page"
         onClick={handleLogin}
       >
         <ArrowLeftOnRectangleIcon className="size-4 mr-2" />
@@ -53,8 +53,8 @@ export function UserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="gap-2 hover:bg-foreground hover:text-background">
+      <DropdownMenuTrigger>
+        <button className="inline-flex items-center gap-2 rounded-md px-2 py-1 hover:bg-tint hover:text-tint-fg transition-colors">
           <Avatar className="size-6">
             {displayAvatar && <AvatarImage src={displayAvatar} alt={displayName} />}
             <AvatarFallback className="text-xs">
@@ -65,7 +65,7 @@ export function UserMenu() {
           <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
             {displayRole}
           </Badge>
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem>
