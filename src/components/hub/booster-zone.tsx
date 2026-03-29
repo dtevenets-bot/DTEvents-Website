@@ -2,7 +2,7 @@
 
 import { ProductGrid } from '@/components/hub/product-grid';
 import { Badge } from '@/components/ui/badge';
-import { Zap } from 'lucide-react';
+import { BoltIcon } from '@heroicons/react/24/outline';
 
 export function BoosterZone() {
   return (
@@ -11,7 +11,7 @@ export function BoosterZone() {
       <div className="mb-6 p-4 border border-dashed rounded-lg bg-foreground text-background">
         <div className="flex items-center gap-3">
           <div className="size-10 rounded-full bg-background text-foreground flex items-center justify-center">
-            <Zap className="size-5" />
+            <BoltIcon className="size-5" />
           </div>
           <div>
             <h2 className="text-lg font-bold">Booster Exclusive Zone</h2>

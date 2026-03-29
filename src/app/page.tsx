@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -56,12 +56,12 @@ function LandingView() {
   );
 }
 
-function HubView() {
+function HubView({ onGoHome }: { onGoHome: () => void }) {
   const [activeTab, setActiveTab] = useState<HubTab>('products');
 
   return (
     <div className="min-h-screen flex flex-col">
-      <HubNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <HubNavigation activeTab={activeTab} onTabChange={setActiveTab} onGoHome={onGoHome} />
       <main className="flex-1 container mx-auto px-4 py-6">
         <AnimatePresence mode="wait">
           <motion.div
@@ -90,6 +90,9 @@ export default function Home() {
   const { data: session, status } = useSession();
   const { setAuth, setLoading, logout } = useAuthStore();
 
+  // Tracks whether user manually chose to visit the landing page
+  const [userPickedLanding, setUserPickedLanding] = useState(false);
+
   // Sync session to auth-store
   useEffect(() => {
     if (status === 'loading') {
@@ -111,11 +114,24 @@ export default function Home() {
     }
   }, [session, status, setAuth, setLoading, logout]);
 
+  // Derive which view to show
+  const showLanding = useMemo(() => {
+    if (status === 'loading') return false;
+    if (!session?.user) return true;
+    return userPickedLanding;
+  }, [session, status, userPickedLanding]);
+
+  const handleGoHome = () => {
+    setUserPickedLanding(true);
+  };
+
   if (status === 'loading') {
     return <LoadingSkeleton />;
   }
 
-  return session?.user ? <HubView /> : <LandingView />;
+  if (showLanding) {
+    return <LandingView />;
+  }
+
+  return <HubView onGoHome={handleGoHome} />;
 }
-
-

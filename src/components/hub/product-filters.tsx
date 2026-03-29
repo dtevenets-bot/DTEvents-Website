@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, RotateCcw } from 'lucide-react';
+import { MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import type { ProductFilters, ProductTag, ProductType } from '@/types';
 
 interface ProductFiltersProps {
@@ -66,7 +66,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
           placeholder="Search products..."
           value={search}
@@ -171,7 +171,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
         className="w-full hover:bg-foreground hover:text-background"
         onClick={resetFilters}
       >
-        <RotateCcw className="size-3 mr-1" />
+        <ArrowPathIcon className="size-3 mr-1" />
         Reset Filters
       </Button>
     </div>

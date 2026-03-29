@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { Loader2 } from 'lucide-react';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 export function LoginModal() {
   const [open, setOpen] = useState(false);
@@ -90,7 +90,7 @@ export function LoginModal() {
             className="w-full"
             disabled={code.length !== 6 || loading}
           >
-            {loading && <Loader2 className="size-4 animate-spin" />}
+            {loading && <ArrowPathIcon className="size-4 animate-spin" />}
             {loading ? 'Verifying...' : 'Sign In'}
           </Button>
         </form>

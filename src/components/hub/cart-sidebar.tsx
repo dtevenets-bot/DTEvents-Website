@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ShoppingCart, Trash2, CreditCard } from 'lucide-react';
+import { ShoppingCartIcon, TrashIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import { useCartStore } from '@/stores/cart-store';
 
 export function CartSidebar() {
@@ -32,7 +32,7 @@ export function CartSidebar() {
       <SheetContent>
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <ShoppingCart className="size-4" />
+            <ShoppingCartIcon className="size-4" />
             Cart ({items.length})
           </SheetTitle>
           <SheetDescription>
@@ -62,7 +62,7 @@ export function CartSidebar() {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <ShoppingCart className="size-4 opacity-40" />
+                          <ShoppingCartIcon className="size-4 opacity-40" />
                         </div>
                       )}
                     </div>
@@ -84,7 +84,7 @@ export function CartSidebar() {
                         className="size-7 hover:bg-destructive hover:text-white"
                         onClick={() => removeItem(item.productId)}
                       >
-                        <Trash2 className="size-3.5" />
+                        <TrashIcon className="size-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -104,7 +104,7 @@ export function CartSidebar() {
                   window.dispatchEvent(new CustomEvent('open-checkout'));
                 }}
               >
-                <CreditCard className="size-4 mr-2" />
+                <CreditCardIcon className="size-4 mr-2" />
                 Checkout
               </Button>
             </SheetFooter>

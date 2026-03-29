@@ -34,15 +34,15 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  Settings,
-  Megaphone,
-} from 'lucide-react';
+  PlusIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  ArrowPathIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Cog6ToothIcon,
+  MegaphoneIcon,
+} from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product, ProductTag, ProductType } from '@/types';
 
@@ -89,6 +89,11 @@ export function OwnerPanel() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<ProductFormData>(defaultFormData);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [deleteStep, setDeleteStep] = useState<0 | 1>(0);
+  const [deleteNameInput, setDeleteNameInput] = useState('');
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -136,13 +141,40 @@ export function OwnerPanel() {
     setWizardOpen(true);
   };
 
-  const handleDelete = async (product: Product) => {
-    if (!confirm(`Deactivate "${product.name}"? This can be undone.`)) return;
+  const openDeleteDialog = (product: Product) => {
+    setDeleteTarget(product);
+    setDeleteStep(0);
+    setDeleteNameInput('');
+    setDeleteConfirmInput('');
+  };
+
+  const closeDeleteDialog = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+    setDeleteStep(0);
+    setDeleteNameInput('');
+    setDeleteConfirmInput('');
+  };
+
+  const handleDeleteNameNext = () => {
+    if (deleteTarget && deleteNameInput.trim() === deleteTarget.name.trim()) {
+      setDeleteStep(1);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget || deleteConfirmInput.trim() !== 'CONFIRM') return;
+    setDeleting(true);
     try {
-      await fetch(`/api/products/${product.id}`, { method: 'DELETE' });
-      fetchProducts();
+      const res = await fetch(`/api/products/${deleteTarget.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        closeDeleteDialog();
+        fetchProducts();
+      }
     } catch {
       // Silent fail
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -209,7 +241,7 @@ export function OwnerPanel() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Settings className="size-5" />
+            <Cog6ToothIcon className="size-5" />
             Manage Products
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -220,7 +252,7 @@ export function OwnerPanel() {
           className="hover:bg-foreground/90"
           onClick={openCreate}
         >
-          <Plus className="size-4 mr-2" />
+          <PlusIcon className="size-4 mr-2" />
           New Product
         </Button>
       </div>
@@ -276,15 +308,15 @@ export function OwnerPanel() {
                           className="size-7 hover:bg-foreground hover:text-background"
                           onClick={() => openEdit(product)}
                         >
-                          <Pencil className="size-3.5" />
+                          <PencilSquareIcon className="size-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="size-7 hover:bg-destructive hover:text-white"
-                          onClick={() => handleDelete(product)}
+                          onClick={() => openDeleteDialog(product)}
                         >
-                          <Trash2 className="size-3.5" />
+                          <TrashIcon className="size-3.5" />
                         </Button>
                       </div>
                     </TableCell>
@@ -529,7 +561,7 @@ export function OwnerPanel() {
 
                 <div className="flex items-center justify-between border rounded-lg p-3">
                   <div className="flex items-center gap-2">
-                    <Megaphone className="size-4" />
+                    <MegaphoneIcon className="size-4" />
                     <div>
                       <Label className="text-sm">Announce Product</Label>
                       <p className="text-xs text-muted-foreground">
@@ -577,14 +609,14 @@ export function OwnerPanel() {
               onClick={prevStep}
               disabled={step === 0}
             >
-              <ChevronLeft className="size-4 mr-1" />
+              <ChevronLeftIcon className="size-4 mr-1" />
               Back
             </Button>
             <div className="flex gap-2">
               {step < TOTAL_STEPS - 1 ? (
                 <Button onClick={nextStep}>
                   Next
-                  <ChevronRight className="size-4 ml-1" />
+                  <ChevronRightIcon className="size-4 ml-1" />
                 </Button>
               ) : (
                 <Button
@@ -592,7 +624,7 @@ export function OwnerPanel() {
                   disabled={saving || !form.name}
                   className="hover:bg-foreground/90"
                 >
-                  {saving && <Loader2 className="size-4 animate-spin" />}
+                  {saving && <ArrowPathIcon className="size-4 animate-spin" />}
                   {saving
                     ? 'Saving...'
                     : editingProduct
@@ -601,6 +633,110 @@ export function OwnerPanel() {
                 </Button>
               )}
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) closeDeleteDialog();
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <TrashIcon className="size-5" />
+              Deactivate Product
+            </DialogTitle>
+            <DialogDescription>
+              {deleteStep === 0
+                ? 'This action will deactivate the product. Please type the product name to confirm.'
+                : 'Final confirmation required. Type CONFIRM to proceed.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {deleteTarget && (
+            <div className="space-y-4">
+              {/* Product info */}
+              <div className="border rounded-lg p-3 bg-muted/50">
+                <p className="text-sm font-medium">{deleteTarget.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  R${deleteTarget.price} · {deleteTarget.type}
+                </p>
+              </div>
+
+              {/* Step 0: Type product name */}
+              {deleteStep === 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="delete-name-input">
+                    Type <span className="font-semibold">"{deleteTarget.name}"</span> to continue
+                  </Label>
+                  <Input
+                    id="delete-name-input"
+                    placeholder={deleteTarget.name}
+                    value={deleteNameInput}
+                    onChange={(e) => setDeleteNameInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleDeleteNameNext();
+                    }}
+                    autoFocus
+                  />
+                  {deleteNameInput.trim().length > 0 &&
+                    deleteNameInput.trim() !== deleteTarget.name.trim() && (
+                      <p className="text-xs text-destructive">Name does not match.</p>
+                    )}
+                </div>
+              )}
+
+              {/* Step 1: Type CONFIRM */}
+              {deleteStep === 1 && (
+                <div className="space-y-2">
+                  <Label htmlFor="delete-confirm-input">
+                    Type <span className="font-semibold">CONFIRM</span> to permanently deactivate
+                  </Label>
+                  <Input
+                    id="delete-confirm-input"
+                    placeholder="CONFIRM"
+                    value={deleteConfirmInput}
+                    onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') confirmDelete();
+                    }}
+                    autoFocus
+                    className="font-mono"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={closeDeleteDialog} disabled={deleting}>
+              Cancel
+            </Button>
+            {deleteStep === 0 ? (
+              <Button
+                variant="destructive"
+                disabled={
+                  !deleteTarget ||
+                  deleteNameInput.trim() !== deleteTarget?.name.trim()
+                }
+                onClick={handleDeleteNameNext}
+              >
+                Next
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                disabled={deleting || deleteConfirmInput.trim() !== 'CONFIRM'}
+                onClick={confirmDelete}
+              >
+                {deleting && <ArrowPathIcon className="size-4 animate-spin mr-1" />}
+                {deleting ? 'Deactivating...' : 'Deactivate Product'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

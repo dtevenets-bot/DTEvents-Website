@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Shield, Gift, Ban, Loader2, CheckCircle2 } from 'lucide-react';
+import { ShieldCheckIcon, GiftIcon, NoSymbolIcon, ArrowPathIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
 interface ActionState {
   loading: boolean;
@@ -103,7 +103,7 @@ export function AdminPanel() {
     <div>
       <div className="mb-6">
         <h2 className="text-2xl font-bold flex items-center gap-2">
-          <Shield className="size-5" />
+          <ShieldCheckIcon className="size-5" />
           Admin Panel
         </h2>
         <p className="text-sm text-muted-foreground">
@@ -114,11 +114,11 @@ export function AdminPanel() {
       <Tabs defaultValue="grant">
         <TabsList>
           <TabsTrigger value="grant">
-            <Gift className="size-3.5 mr-1" />
+            <GiftIcon className="size-3.5 mr-1" />
             Grant Product
           </TabsTrigger>
           <TabsTrigger value="revoke">
-            <Ban className="size-3.5 mr-1" />
+            <NoSymbolIcon className="size-3.5 mr-1" />
             Revoke Product
           </TabsTrigger>
         </TabsList>
@@ -159,7 +159,7 @@ export function AdminPanel() {
                 )}
                 {grantState.success && (
                   <div className="flex items-center gap-2 text-sm text-green-600">
-                    <CheckCircle2 className="size-4" />
+                    <CheckCircleIcon className="size-4" />
                     {grantState.success}
                   </div>
                 )}
@@ -169,7 +169,7 @@ export function AdminPanel() {
                   disabled={grantState.loading || !grantUserId || !grantProductId}
                   className="hover:bg-foreground/90"
                 >
-                  {grantState.loading && <Loader2 className="size-4 animate-spin" />}
+                  {grantState.loading && <ArrowPathIcon className="size-4 animate-spin" />}
                   {grantState.loading ? 'Granting...' : 'Grant Product'}
                 </Button>
               </form>
@@ -203,7 +203,7 @@ export function AdminPanel() {
                 )}
                 {revokeState.success && (
                   <div className="flex items-center gap-2 text-sm text-green-600">
-                    <CheckCircle2 className="size-4" />
+                    <CheckCircleIcon className="size-4" />
                     {revokeState.success}
                   </div>
                 )}
@@ -213,7 +213,7 @@ export function AdminPanel() {
                   variant="destructive"
                   disabled={revokeState.loading || !revokeUserProductId}
                 >
-                  {revokeState.loading && <Loader2 className="size-4 animate-spin" />}
+                  {revokeState.loading && <ArrowPathIcon className="size-4 animate-spin" />}
                   {revokeState.loading ? 'Revoking...' : 'Revoke Product'}
                 </Button>
               </form>

@@ -1,52 +1,94 @@
 "use client"
 
 import * as React from "react"
-import * as AvatarPrimitive from "@radix-ui/react-avatar"
 
 import { cn } from "@/lib/utils"
+
+/* ------------------------------------------------------------------ */
+/*  Avatar Context                                                      */
+/* ------------------------------------------------------------------ */
+
+const AvatarContext = React.createContext<{
+  imageStatus: "loading" | "loaded" | "error"
+  setImageStatus: (status: "loading" | "loaded" | "error") => void
+}>({
+  imageStatus: "loading",
+  setImageStatus: () => {},
+})
+
+/* ------------------------------------------------------------------ */
+/*  Avatar                                                              */
+/* ------------------------------------------------------------------ */
 
 function Avatar({
   className,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root>) {
+}: React.ComponentProps<"span">) {
+  const [imageStatus, setImageStatus] = React.useState<"loading" | "loaded" | "error">("loading")
+
   return (
-    <AvatarPrimitive.Root
-      data-slot="avatar"
-      className={cn(
-        "relative flex size-8 shrink-0 overflow-hidden rounded-full",
-        className
-      )}
-      {...props}
-    />
+    <AvatarContext.Provider value={{ imageStatus, setImageStatus }}>
+      <span
+        className={cn(
+          "relative flex size-8 shrink-0 overflow-hidden rounded-full",
+          className
+        )}
+        {...props}
+      />
+    </AvatarContext.Provider>
   )
 }
+
+/* ------------------------------------------------------------------ */
+/*  AvatarImage                                                         */
+/* ------------------------------------------------------------------ */
 
 function AvatarImage({
   className,
+  src,
+  alt = "",
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+}: React.ComponentProps<"img">) {
+  const { imageStatus, setImageStatus } = React.useContext(AvatarContext)
+
+  if (imageStatus === "error") return null
+
   return (
-    <AvatarPrimitive.Image
-      data-slot="avatar-image"
+    <img
+      src={src}
+      alt={alt}
       className={cn("aspect-square size-full", className)}
+      onError={() => setImageStatus("error")}
+      onLoad={() => setImageStatus("loaded")}
       {...props}
     />
   )
 }
 
+/* ------------------------------------------------------------------ */
+/*  AvatarFallback                                                      */
+/* ------------------------------------------------------------------ */
+
 function AvatarFallback({
   className,
+  children,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+}: React.ComponentProps<"span">) {
+  const { imageStatus } = React.useContext(AvatarContext)
+
+  // Only render fallback when image is not loaded
+  if (imageStatus === "loaded") return null
+
   return (
-    <AvatarPrimitive.Fallback
-      data-slot="avatar-fallback"
+    <span
       className={cn(
-        "bg-muted flex size-full items-center justify-center rounded-full",
+        "bg-muted flex size-full items-center justify-center rounded-full absolute inset-0",
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </span>
   )
 }
 

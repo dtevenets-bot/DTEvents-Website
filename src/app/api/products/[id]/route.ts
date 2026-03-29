@@ -156,6 +156,19 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
       deletedBy: session.user.discordId,
     });
 
+    // Clear announcedProduct if this product was the announced one
+    try {
+      const announcedSnapshot = await db.ref('siteConfig/announcedProduct').once('value');
+      if (announcedSnapshot.exists()) {
+        const announced = announcedSnapshot.val() as Record<string, unknown>;
+        if (announced.id === id) {
+          await db.ref('siteConfig/announcedProduct').remove();
+        }
+      }
+    } catch (announceErr) {
+      console.warn(`[DELETE /api/products/${id}] Failed to clear announcedProduct:`, announceErr);
+    }
+
     // Create audit log
     const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {

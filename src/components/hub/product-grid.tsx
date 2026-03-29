@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingCart, Eye, Search } from 'lucide-react';
+import { ShoppingCartIcon, EyeIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useCartStore } from '@/stores/cart-store';
 import { ProductFilters } from '@/components/hub/product-filters';
 import { ProductDetailModal } from '@/components/hub/product-detail-modal';
@@ -89,7 +89,7 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
-            <Search className="size-12 mx-auto mb-4 opacity-40" />
+            <MagnifyingGlassIcon className="size-12 mx-auto mb-4 opacity-40" />
             <p>No products found. Try adjusting your filters.</p>
           </div>
         ) : (
@@ -114,7 +114,7 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <ShoppingCart className="size-10 opacity-20" />
+                        <ShoppingCartIcon className="size-10 opacity-20" />
                       </div>
                     )}
                     {product.boosterExclusive && (
@@ -139,7 +139,7 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
                           <Badge
                             key={tag}
                             variant="outline"
-                            className="text-[10px] group-hover:border-white/30"
+                            className="text-[10px] group-hover:border-background/30 group-hover:text-background"
                           >
                             {tag}
                           </Badge>
@@ -150,10 +150,10 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 text-xs group-hover:border-white/30 group-hover:text-background"
+                        className="flex-1 text-xs group-hover:border-background/30"
                         onClick={() => handleViewProduct(product)}
                       >
-                        <Eye className="size-3 mr-1" />
+                        <EyeIcon className="size-3 mr-1" />
                         View
                       </Button>
                       <Button
@@ -161,7 +161,7 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
                         className="flex-1 text-xs"
                         onClick={() => handleAddToCart(product)}
                       >
-                        <ShoppingCart className="size-3 mr-1" />
+                        <ShoppingCartIcon className="size-3 mr-1" />
                         Add
                       </Button>
                     </div>

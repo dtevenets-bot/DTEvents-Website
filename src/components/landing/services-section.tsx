@@ -1,23 +1,23 @@
 'use client';
 
-import { Settings, Palette, Calendar } from 'lucide-react';
+import { Cog6ToothIcon, SwatchIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { Card, CardContent } from '@/components/ui/card';
 
 const services = [
   {
-    icon: Settings,
+    icon: Cog6ToothIcon,
     title: 'Product Manufacturing',
     description:
       'Professional-grade Roblox gamepasses, plugins, and assets built with clean architecture and performance in mind.',
   },
   {
-    icon: Palette,
+    icon: SwatchIcon,
     title: 'Custom Commissions',
     description:
       'Bespoke development tailored to your unique vision. From UI design to complex systems, we bring your ideas to life.',
   },
   {
-    icon: Calendar,
+    icon: CalendarDaysIcon,
     title: 'Event Hosting',
     description:
       'End-to-end event management for Roblox communities. Custom games, scoring systems, and live moderation tools.',
@@ -42,7 +42,7 @@ export function ServicesSection() {
               className="group border transition-colors hover:bg-foreground hover:text-background py-0"
             >
               <CardContent className="flex flex-col items-center text-center p-8 pt-8 gap-4">
-                <div className="size-14 rounded-full border flex items-center justify-center group-hover:bg-background group-hover:text-foreground transition-colors">
+                <div className="size-14 rounded-full border bg-muted text-muted-foreground flex items-center justify-center group-hover:bg-foreground group-hover:text-background transition-colors">
                   <service.icon className="size-6" />
                 </div>
                 <h3 className="text-xl font-semibold">{service.title}</h3>

@@ -12,14 +12,14 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  User,
-  Package,
-  ShoppingBag,
-  Shield,
-  Settings,
-  LogOut,
-  LogIn,
-} from 'lucide-react';
+  UserIcon,
+  CubeIcon,
+  ShoppingBagIcon,
+  ShieldCheckIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+  ArrowLeftOnRectangleIcon,
+} from '@heroicons/react/24/outline';
 import { useAuthStore } from '@/stores/auth-store';
 
 export function UserMenu() {
@@ -41,7 +41,7 @@ export function UserMenu() {
         className="hover:bg-foreground hover:text-background"
         onClick={handleLogin}
       >
-        <LogIn className="size-4 mr-2" />
+        <ArrowLeftOnRectangleIcon className="size-4 mr-2" />
         Login
       </Button>
     );
@@ -69,33 +69,33 @@ export function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem>
-          <User className="size-4 mr-2" />
+          <UserIcon className="size-4 mr-2" />
           Profile
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
-          <Package className="size-4 mr-2" />
+          <CubeIcon className="size-4 mr-2" />
           Products
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <ShoppingBag className="size-4 mr-2" />
+          <ShoppingBagIcon className="size-4 mr-2" />
           My Products
         </DropdownMenuItem>
         {isAdmin() && (
           <DropdownMenuItem>
-            <Shield className="size-4 mr-2" />
+            <ShieldCheckIcon className="size-4 mr-2" />
             Admin
           </DropdownMenuItem>
         )}
         {isOwner() && (
           <DropdownMenuItem>
-            <Settings className="size-4 mr-2" />
+            <Cog6ToothIcon className="size-4 mr-2" />
             Manage
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="size-4 mr-2" />
+          <ArrowRightOnRectangleIcon className="size-4 mr-2" />
           Logout
         </DropdownMenuItem>
       </DropdownMenuContent>

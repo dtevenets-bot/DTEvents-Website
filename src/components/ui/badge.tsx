@@ -1,5 +1,4 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -29,17 +28,27 @@ function Badge({
   className,
   variant,
   asChild = false,
+  children,
   ...props
 }: React.ComponentProps<"span"> &
   VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot : "span"
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
+      className: cn(
+        badgeVariants({ variant }),
+        (children as React.ReactElement<Record<string, unknown>>).props.className,
+        className
+      ),
+    })
+  }
 
   return (
-    <Comp
-      data-slot="badge"
+    <span
       className={cn(badgeVariants({ variant }), className)}
       {...props}
-    />
+    >
+      {children}
+    </span>
   )
 }
 

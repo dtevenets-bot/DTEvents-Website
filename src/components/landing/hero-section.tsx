@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Slide {
@@ -116,7 +116,7 @@ export function HeroSection() {
             className="text-white hover:bg-white/20 hover:text-white border border-white/20"
             onClick={prevSlide}
           >
-            <ChevronLeft className="size-5" />
+            <ChevronLeftIcon className="size-5" />
           </Button>
 
           {/* Slide dots */}
@@ -140,7 +140,7 @@ export function HeroSection() {
             className="text-white hover:bg-white/20 hover:text-white border border-white/20"
             onClick={nextSlide}
           >
-            <ChevronRight className="size-5" />
+            <ChevronRightIcon className="size-5" />
           </Button>
         </div>
       </div>
@@ -152,7 +152,7 @@ export function HeroSection() {
         className="absolute bottom-6 right-6 z-10 text-white/60 hover:text-white hover:bg-white/10 border border-white/20"
         onClick={() => setIsMuted((prev) => !prev)}
       >
-        {isMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+        {isMuted ? <SpeakerXMarkIcon className="size-4" /> : <SpeakerWaveIcon className="size-4" />}
       </Button>
     </section>
   );

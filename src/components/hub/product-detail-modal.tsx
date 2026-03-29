@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ShoppingCartIcon, ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import { useCartStore } from '@/stores/cart-store';
 import type { Product } from '@/types';
@@ -98,13 +98,13 @@ export function ProductDetailModal({
                 className="absolute left-2 top-1/2 -translate-y-1/2 size-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
                 onClick={() => setShowBack((prev) => !prev)}
               >
-                <ArrowLeft className="size-4" />
+                <ArrowLeftIcon className="size-4" />
               </button>
               <button
                 className="absolute right-2 top-1/2 -translate-y-1/2 size-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
                 onClick={() => setShowBack((prev) => !prev)}
               >
-                <ArrowRight className="size-4" />
+                <ArrowRightIcon className="size-4" />
               </button>
             </>
           )}
@@ -136,7 +136,7 @@ export function ProductDetailModal({
             className="w-full hover:bg-foreground/90"
             onClick={handleAddToCart}
           >
-            <ShoppingCart className="size-4 mr-2" />
+            <ShoppingCartIcon className="size-4 mr-2" />
             Add to Cart
           </Button>
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
+import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 
 export function CommissionsSection() {
   return (
@@ -24,7 +24,7 @@ export function CommissionsSection() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <MessageSquare className="size-4 mr-2" />
+            <ChatBubbleLeftRightIcon className="size-4 mr-2" />
             Join our Discord
           </a>
         </Button>

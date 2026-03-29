@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Package, CheckCircle2 } from 'lucide-react';
+import { CubeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import type { UserProduct } from '@/types';
 
@@ -52,7 +52,7 @@ export function MyProductsView() {
         </div>
       ) : products.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
-          <Package className="size-12 mx-auto mb-4 opacity-40" />
+          <CubeIcon className="size-12 mx-auto mb-4 opacity-40" />
           <p>You don&apos;t own any products yet.</p>
           <p className="text-sm mt-1">Browse the store to find something you like!</p>
         </div>
@@ -69,7 +69,7 @@ export function MyProductsView() {
                 <CardContent className="p-4 flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0">
                     <div className="size-10 bg-muted rounded-md flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="size-5 text-green-500" />
+                      <CheckCircleIcon className="size-5 text-green-500" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold text-sm truncate">

@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, ShoppingCart, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { ArrowPathIcon, ShoppingCartIcon, ArrowTopRightOnSquareIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useCartStore } from '@/stores/cart-store';
 
 export function CheckoutModal() {
@@ -87,7 +87,7 @@ export function CheckoutModal() {
 
         {success ? (
           <div className="flex flex-col items-center gap-4 py-6">
-            <CheckCircle2 className="size-16 text-green-500" />
+            <CheckCircleIcon className="size-16 text-green-500" />
             <p className="text-sm text-center">
               Cart saved successfully! Open the Roblox hub to complete your purchase.
             </p>
@@ -100,7 +100,7 @@ export function CheckoutModal() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <ExternalLink className="size-4 mr-2" />
+                <ArrowTopRightOnSquareIcon className="size-4 mr-2" />
                 Open Roblox Hub
               </a>
             </Button>
@@ -144,7 +144,7 @@ export function CheckoutModal() {
                   className="w-full"
                   disabled={loading || !robloxUserId || items.length === 0}
                 >
-                  {loading && <Loader2 className="size-4 animate-spin" />}
+                  {loading && <ArrowPathIcon className="size-4 animate-spin" />}
                   {loading ? 'Processing...' : 'Save Cart & Continue'}
                 </Button>
               </DialogFooter>

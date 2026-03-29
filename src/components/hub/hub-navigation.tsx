@@ -1,10 +1,32 @@
 'use client';
 
+import { signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import {
+  Separator,
+} from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCartStore } from '@/stores/cart-store';
-import { ShoppingCart, Package, ShoppingBag, Zap, Shield, Settings, Menu } from 'lucide-react';
+import {
+  ShoppingCartIcon,
+  CubeIcon,
+  ShoppingBagIcon,
+  BoltIcon,
+  ShieldCheckIcon,
+  Cog6ToothIcon,
+  Bars3Icon,
+  HomeIcon,
+  ArrowRightOnRectangleIcon,
+} from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
 export type HubTab = 'products' | 'my-products' | 'booster' | 'admin' | 'manage';
@@ -12,20 +34,27 @@ export type HubTab = 'products' | 'my-products' | 'booster' | 'admin' | 'manage'
 interface HubNavigationProps {
   activeTab: HubTab;
   onTabChange: (tab: HubTab) => void;
+  onGoHome?: () => void;
 }
 
 const tabs = [
-  { id: 'products' as HubTab, label: 'Products', icon: Package },
-  { id: 'my-products' as HubTab, label: 'My Products', icon: ShoppingBag },
-  { id: 'booster' as HubTab, label: 'Booster Zone', icon: Zap, minRole: 'booster' },
-  { id: 'admin' as HubTab, label: 'Admin', icon: Shield, minRole: 'admin' },
-  { id: 'manage' as HubTab, label: 'Manage Products', icon: Settings, minRole: 'owner' },
+  { id: 'products' as HubTab, label: 'Products', icon: CubeIcon },
+  { id: 'my-products' as HubTab, label: 'My Products', icon: ShoppingBagIcon },
+  { id: 'booster' as HubTab, label: 'Booster Zone', icon: BoltIcon, minRole: 'booster' },
+  { id: 'admin' as HubTab, label: 'Admin', icon: ShieldCheckIcon, minRole: 'admin' },
+  { id: 'manage' as HubTab, label: 'Manage Products', icon: Cog6ToothIcon, minRole: 'owner' },
 ];
 
-export function HubNavigation({ activeTab, onTabChange }: HubNavigationProps) {
-  const { isBooster, isAdmin, isOwner } = useAuthStore();
+export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigationProps) {
+  const { data: session } = useSession();
+  const { user, isBooster, isAdmin, isOwner } = useAuthStore();
   const itemCount = useCartStore((s) => s.itemCount());
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const displayName = user?.username || session?.user?.username || 'User';
+  const displayAvatar = user?.avatar || session?.user?.avatar || '';
+  const displayRole = user?.role || session?.user?.role || 'user';
 
   const visibleTabs = tabs.filter((tab) => {
     if (tab.minRole === 'booster') return isBooster();
@@ -34,11 +63,17 @@ export function HubNavigation({ activeTab, onTabChange }: HubNavigationProps) {
     return true;
   });
 
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await signOut({ callbackUrl: '/' });
+  };
+
   return (
     <div className="border-b bg-background sticky top-0 z-40">
       <div className="container mx-auto flex items-center justify-between px-4 h-14">
+        {/* Left side: Logo + Tabs */}
         <div className="flex items-center gap-1">
-          <span className="font-bold text-lg mr-4 hidden sm:block">DT Events</span>
+          <span className="font-bold text-lg mr-3 hidden sm:block">DT Events</span>
 
           {/* Desktop tabs */}
           <nav className="hidden md:flex items-center gap-1">
@@ -47,7 +82,7 @@ export function HubNavigation({ activeTab, onTabChange }: HubNavigationProps) {
                 key={tab.id}
                 variant="ghost"
                 size="sm"
-                className={`gap-1.5 ${activeTab === tab.id ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'hover:bg-foreground hover:text-background'}`}
+                className={`gap-1.5 ${activeTab === tab.id ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'hover:bg-accent hover:text-accent-foreground'}`}
                 onClick={() => onTabChange(tab.id)}
               >
                 <tab.icon className="size-3.5" />
@@ -59,8 +94,8 @@ export function HubNavigation({ activeTab, onTabChange }: HubNavigationProps) {
           {/* Mobile hamburger */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden hover:bg-foreground hover:text-background">
-                <Menu className="size-4" />
+              <Button variant="ghost" size="icon" className="md:hidden hover:bg-accent hover:text-accent-foreground">
+                <Bars3Icon className="size-4" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-64">
@@ -72,7 +107,7 @@ export function HubNavigation({ activeTab, onTabChange }: HubNavigationProps) {
                   <Button
                     key={tab.id}
                     variant={activeTab === tab.id ? 'secondary' : 'ghost'}
-                    className={`justify-start gap-2 ${activeTab === tab.id ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'hover:bg-foreground hover:text-background'}`}
+                    className={`justify-start gap-2 ${activeTab === tab.id ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'hover:bg-accent hover:text-accent-foreground'}`}
                     onClick={() => {
                       onTabChange(tab.id);
                       setMobileOpen(false);
@@ -82,27 +117,96 @@ export function HubNavigation({ activeTab, onTabChange }: HubNavigationProps) {
                     {tab.label}
                   </Button>
                 ))}
+
+                <Separator className="my-2" />
+
+                <Button
+                  variant="ghost"
+                  className="justify-start gap-2 hover:bg-accent hover:text-accent-foreground"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    onGoHome?.();
+                  }}
+                >
+                  <HomeIcon className="size-4" />
+                  Landing Page
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="justify-start gap-2 text-destructive hover:text-destructive"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    handleSignOut();
+                  }}
+                  disabled={signingOut}
+                >
+                  <ArrowRightOnRectangleIcon className="size-4" />
+                  Sign Out
+                </Button>
               </div>
             </SheetContent>
           </Sheet>
         </div>
 
-        {/* Cart icon */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative hover:bg-foreground hover:text-background"
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('open-cart'));
-          }}
-        >
-          <ShoppingCart className="size-4" />
-          {itemCount > 0 && (
-            <span className="absolute -top-1 -right-1 size-4 bg-foreground text-background rounded-full text-[10px] flex items-center justify-center font-bold">
-              {itemCount > 99 ? '99+' : itemCount}
-            </span>
-          )}
-        </Button>
+        {/* Right side: Cart + User + Home + Logout */}
+        <div className="flex items-center gap-1">
+          {/* Home button (desktop) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden sm:flex hover:bg-accent hover:text-accent-foreground"
+            onClick={onGoHome}
+            title="Back to landing page"
+          >
+            <HomeIcon className="size-4" />
+          </Button>
+
+          {/* Cart */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative hover:bg-accent hover:text-accent-foreground"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('open-cart'));
+            }}
+          >
+            <ShoppingCartIcon className="size-4" />
+            {itemCount > 0 && (
+              <span className="absolute -top-1 -right-1 size-4 bg-foreground text-background rounded-full text-[10px] flex items-center justify-center font-bold">
+                {itemCount > 99 ? '99+' : itemCount}
+              </span>
+            )}
+          </Button>
+
+          {/* User avatar + name */}
+          <div className="hidden lg:flex items-center gap-2 px-2">
+            <Avatar className="size-7">
+              {displayAvatar && <AvatarImage src={displayAvatar} alt={displayName} />}
+              <AvatarFallback className="text-xs">
+                {displayName.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col leading-none">
+              <span className="text-xs font-medium">{displayName}</span>
+              <Badge variant="secondary" className="text-[9px] px-1 py-0 mt-0.5 w-fit capitalize">
+                {displayRole}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Sign Out (desktop) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-destructive hover:text-white"
+            onClick={handleSignOut}
+            disabled={signingOut}
+            title="Sign out"
+          >
+            <ArrowRightOnRectangleIcon className="size-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingBag, ArrowRight } from 'lucide-react';
+import { ShoppingBagIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import type { Product } from '@/types';
 
@@ -55,7 +55,7 @@ export function ProductsPreview() {
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            <ShoppingBag className="size-12 mx-auto mb-4 opacity-40" />
+            <ShoppingBagIcon className="size-12 mx-auto mb-4 opacity-40" />
             <p>No products available yet. Check back soon!</p>
           </div>
         ) : (
@@ -78,7 +78,7 @@ export function ProductsPreview() {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <ShoppingBag className="size-12 opacity-20" />
+                          <ShoppingBagIcon className="size-12 opacity-20" />
                         </div>
                       )}
                     </div>
@@ -91,7 +91,7 @@ export function ProductsPreview() {
                             <Badge
                               key={tag}
                               variant="outline"
-                              className="text-[10px] group-hover:border-white/30"
+                              className="text-[10px] group-hover:border-background/30 group-hover:text-background"
                             >
                               {tag}
                             </Badge>
@@ -113,7 +113,7 @@ export function ProductsPreview() {
                 }}
               >
                 View All Products
-                <ArrowRight className="size-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                <ArrowRightIcon className="size-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
           </>
