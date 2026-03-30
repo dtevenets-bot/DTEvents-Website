@@ -3,38 +3,90 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/firebase';
 import { parseProduct } from '@/lib/firebase';
-import type { AuditLog } from '@/types';
+import type { AuditLog, ProductTag, ProductType } from '@/types';
 
-interface RouteParams {
-  params: Promise<{ id: string }>;
-}
-
-export async function GET(_req: NextRequest, { params }: RouteParams) {
+// GET /api/products — List all products with optional filtering
+export async function GET(req: NextRequest) {
   try {
-    const { id } = await params;
+    const { searchParams } = new URL(req.url);
 
-    const snapshot = await db.ref(`products/${id}`).once('value');
+    const showAll = searchParams.get('showAll') === 'true';
+    const search = searchParams.get('search')?.trim().toLowerCase() || '';
+    const tagsRaw = searchParams.get('tags') || '';
+    const typesRaw = searchParams.get('types') || '';
+    const boosterOnly = searchParams.get('boosterOnly') === 'true';
+    const priceMin = searchParams.get('priceMin');
+    const priceMax = searchParams.get('priceMax');
+
+    const filterTags = tagsRaw
+      ? (tagsRaw.split(',').map((t) => t.trim().toLowerCase()) as ProductTag[])
+      : null;
+    const filterTypes = typesRaw
+      ? (typesRaw.split(',').map((t) => t.trim().toLowerCase()) as ProductType[])
+      : null;
+    const minPrice = priceMin ? parseFloat(priceMin) : null;
+    const maxPrice = priceMax ? parseFloat(priceMax) : null;
+
+    const snapshot = await db.ref('products').once('value');
 
     if (!snapshot.exists()) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
+      return NextResponse.json([]);
     }
 
-    const product = parseProduct(id, snapshot.val() as Record<string, unknown>);
+    const raw = snapshot.val() as Record<string, Record<string, unknown>>;
+    const products: ReturnType<typeof parseProduct>[] = [];
 
-    return NextResponse.json(product);
+    for (const [id, data] of Object.entries(raw)) {
+      const product = parseProduct(id, data);
+
+      // Filter: only active products unless showAll is true
+      if (!showAll && !product.active) continue;
+
+      // Filter: search by name
+      if (search && !product.name.toLowerCase().includes(search)) continue;
+
+      // Filter: by tags
+      if (filterTags && filterTags.length > 0) {
+        const hasTag = product.tags.some((t) =>
+          filterTags.includes(t)
+        );
+        if (!hasTag) continue;
+      }
+
+      // Filter: by type
+      if (filterTypes && filterTypes.length > 0) {
+        if (!filterTypes.includes(product.type)) continue;
+      }
+
+      // Filter: booster exclusive
+      if (boosterOnly && !product.boosterExclusive) continue;
+
+      // Filter: price range
+      if (minPrice !== null && product.price < minPrice) continue;
+      if (maxPrice !== null && product.price > maxPrice) continue;
+
+      products.push(product);
+    }
+
+    // Sort by createdAt descending (newest first)
+    products.sort((a, b) => {
+      const aTime = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt).getTime();
+      const bTime = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt).getTime();
+      return bTime - aTime;
+    });
+
+    return NextResponse.json(products);
   } catch (error) {
-    console.error(`[GET /api/products/${id}] Error:`, error);
+    console.error('[GET /api/products] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch product' },
+      { error: 'Failed to fetch products' },
       { status: 500 }
     );
   }
 }
 
-export async function PUT(req: NextRequest, { params }: RouteParams) {
+// POST /api/products — Create a new product (owner only)
+export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -42,16 +94,6 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         { error: 'Unauthorized. Owner access required.' },
         { status: 403 }
-      );
-    }
-
-    const { id } = await params;
-
-    const existingSnapshot = await db.ref(`products/${id}`).once('value');
-    if (!existingSnapshot.exists()) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
       );
     }
 
@@ -61,119 +103,95 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       description,
       price,
       gamepassId,
-      active,
-      tags,
       type,
+      tags,
       images,
       maker,
       boosterExclusive,
+      active,
+      announce,
     } = body;
 
-    const updates: Record<string, unknown> = {};
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Product name is required.' },
+        { status: 400 }
+      );
+    }
 
-    if (name !== undefined) updates.name = name;
-    if (description !== undefined) updates.description = description;
-    if (price !== undefined) updates.price = price;
-    if (gamepassId !== undefined) updates.gamepassId = gamepassId || null;
-    if (active !== undefined) updates.active = active;
-    if (tags !== undefined) updates.tags = tags;
-    if (type !== undefined) updates.type = type;
-    if (images !== undefined) updates.images = images;
-    if (maker !== undefined) updates.maker = maker;
-    if (boosterExclusive !== undefined) updates.boosterExclusive = boosterExclusive;
+    const productRef = db.ref('products').push();
+    const productId = productRef.key!;
 
-    await db.ref(`products/${id}`).update(updates);
+    const productData: Record<string, unknown> = {
+      name: name.trim(),
+      description: description || '',
+      price: typeof price === 'number' ? price : 0,
+      gamepassId: typeof gamepassId === 'number' ? gamepassId : null,
+      type: type || 'other',
+      tags: Array.isArray(tags) ? tags : [],
+      images: {
+        front: images?.front || '',
+        back: images?.back || '',
+      },
+      maker: maker || '',
+      boosterExclusive: boosterExclusive === true,
+      active: active !== false,
+      createdAt: Date.now(),
+      createdBy: session.user.discordId,
+    };
 
+    await productRef.set(productData);
+
+    // Audit log
     const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {
-      action: 'edit_product',
+      action: 'create_product',
       performedBy: session.user.discordId,
       performedByRole: session.user.role,
-      targetProductId: id,
-      details: `Edited product "${name || id}" (ID: ${id}). Fields: ${Object.keys(updates).join(', ')}`,
+      targetProductId: productId,
+      details: `Created product "${name.trim()}" (ID: ${productId})`,
       createdAt: Date.now(),
     };
     await auditRef.set(auditLog);
 
-    const updatedSnapshot = await db.ref(`products/${id}`).once('value');
-    const updatedProduct = parseProduct(id, updatedSnapshot.val() as Record<string, unknown>);
+    // Handle announcement if requested
+    if (announce) {
+      const announcedProduct = {
+        id: productId,
+        name: name.trim(),
+        description: description || '',
+        price: typeof price === 'number' ? price : 0,
+        type: type || 'other',
+        maker: maker || '',
+        images: {
+          front: images?.front || '',
+          back: images?.back || '',
+        },
+        announcedAt: Date.now(),
+      };
 
-    return NextResponse.json(updatedProduct);
+      await db.ref('siteConfig/announcedProduct').set(announcedProduct);
+
+      // Audit log for announcement
+      const announceAuditRef = db.ref('auditLogs').push();
+      const announceAuditLog: Omit<AuditLog, 'id'> = {
+        action: 'announce_product',
+        performedBy: session.user.discordId,
+        performedByRole: session.user.role,
+        targetProductId: productId,
+        details: `Announced product "${name.trim()}" (ID: ${productId})`,
+        createdAt: Date.now(),
+      };
+      await announceAuditRef.set(announceAuditLog);
+    }
+
+    const createdProduct = parseProduct(productId, productData);
+
+    return NextResponse.json(createdProduct, { status: 201 });
   } catch (error) {
-    console.error(`[PUT /api/products/${id}] Error:`, error);
+    console.error('[POST /api/products] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to update product' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(_req: NextRequest, { params }: RouteParams) {
-  try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || session.user.role !== 'owner') {
-      return NextResponse.json(
-        { error: 'Unauthorized. Owner access required.' },
-        { status: 403 }
-      );
-    }
-
-    const { id } = await params;
-
-    const existingSnapshot = await db.ref(`products/${id}`).once('value');
-    if (!existingSnapshot.exists()) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
-    }
-
-    const existingData = existingSnapshot.val() as Record<string, unknown>;
-    const productName = (existingData.name as string) || id;
-
-    // Permanently delete the product from Firebase
-    await db.ref(`products/${id}`).remove();
-
-    // Also remove the attached RBXM file if it exists
-    try {
-      await db.ref(`rbxmFiles/${id}`).remove();
-    } catch (fileErr) {
-      console.warn(`[DELETE /api/products/${id}] Failed to remove attached file:`, fileErr);
-    }
-
-    // Clear announcement if this was the announced product
-    try {
-      const announcedSnapshot = await db.ref('siteConfig/announcedProduct').once('value');
-      if (announcedSnapshot.exists()) {
-        const announced = announcedSnapshot.val() as Record<string, unknown>;
-        if (announced.id === id) {
-          await db.ref('siteConfig/announcedProduct').remove();
-        }
-      }
-    } catch (announceErr) {
-      console.warn(`[DELETE /api/products/${id}] Failed to clear announcedProduct:`, announceErr);
-    }
-
-    const auditRef = db.ref('auditLogs').push();
-    const auditLog: Omit<AuditLog, 'id'> = {
-      action: 'delete_product',
-      performedBy: session.user.discordId,
-      performedByRole: session.user.role,
-      targetProductId: id,
-      details: `Permanently deleted product "${productName}" (ID: ${id})`,
-      createdAt: Date.now(),
-    };
-    await auditRef.set(auditLog);
-
-    return NextResponse.json({
-      message: `Product "${productName}" has been permanently deleted.`,
-      id,
-    });
-  } catch (error) {
-    console.error(`[DELETE /api/products/${id}] Error:`, error);
-    return NextResponse.json(
-      { error: 'Failed to delete product' },
+      { error: 'Failed to create product' },
       { status: 500 }
     );
   }
