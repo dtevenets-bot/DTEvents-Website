@@ -5,14 +5,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CubeIcon, CheckCircleIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import { motion } from 'framer-motion';
+import { CubeIcon, CheckCircleIcon, ArrowDownTrayIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { UserProduct } from '@/types';
 
 export function MyProductsView() {
   const [products, setProducts] = useState<UserProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<{ productId: string; message: string } | null>(null);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -32,12 +33,22 @@ export function MyProductsView() {
 
   const handleDownload = async (productId: string, productName: string) => {
     setDownloadingId(productId);
+    setDownloadError(null);
     try {
       const res = await fetch(`/api/download?productId=${productId}`);
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: 'Download failed' }));
-        throw new Error(data.error || 'Download failed');
+
+        if (res.status === 401) {
+          throw new Error('Please log in with a linked Roblox account to download.');
+        } else if (res.status === 403) {
+          throw new Error('You do not own this product. Purchase or claim it first from the store.');
+        } else if (res.status === 404) {
+          throw new Error('No file is available for download for this product.');
+        } else {
+          throw new Error(data.error || 'Download failed');
+        }
       }
 
       const blob = await res.blob();
@@ -51,7 +62,10 @@ export function MyProductsView() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download error:', err);
-      alert(err instanceof Error ? err.message : 'Failed to download file');
+      setDownloadError({
+        productId,
+        message: err instanceof Error ? err.message : 'Failed to download file',
+      });
     } finally {
       setDownloadingId(null);
     }
@@ -113,6 +127,7 @@ export function MyProductsView() {
                       Active
                     </Badge>
                   </div>
+                  <div className="flex flex-col gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -130,6 +145,20 @@ export function MyProductsView() {
                     )}
                     {downloadingId === up.productId ? 'Downloading...' : 'Download File'}
                   </Button>
+                  <AnimatePresence>
+                    {downloadError && downloadError.productId === up.productId && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex items-start gap-1.5 text-xs text-red-500"
+                      >
+                        <ExclamationTriangleIcon className="size-3.5 mt-0.5 shrink-0" />
+                        <span>{downloadError.message}</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
