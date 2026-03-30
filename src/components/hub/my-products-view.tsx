@@ -3,14 +3,16 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CubeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { CubeIcon, CheckCircleIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import type { UserProduct } from '@/types';
 
 export function MyProductsView() {
   const [products, setProducts] = useState<UserProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -28,6 +30,33 @@ export function MyProductsView() {
     fetchProducts();
   }, []);
 
+  const handleDownload = async (productId: string, productName: string) => {
+    setDownloadingId(productId);
+    try {
+      const res = await fetch(`/api/download?productId=${productId}`);
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Download failed' }));
+        throw new Error(data.error || 'Download failed');
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${productName}.rbxm`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+      alert(err instanceof Error ? err.message : 'Failed to download file');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -44,7 +73,7 @@ export function MyProductsView() {
               <CardContent className="p-4 space-y-3">
                 <Skeleton className="h-5 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-8 w-24" />
               </CardContent>
             </Card>
           ))}
@@ -65,23 +94,42 @@ export function MyProductsView() {
               transition={{ duration: 0.25, delay: Math.min(idx * 0.05, 0.3) }}
             >
               <Card className="border py-0">
-                <CardContent className="p-4 flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="size-10 bg-soft rounded-md flex items-center justify-center shrink-0">
-                      <CheckCircleIcon className="size-5 text-green-500" />
+                <CardContent className="p-4 flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="size-10 bg-soft rounded-md flex items-center justify-center shrink-0">
+                        <CheckCircleIcon className="size-5 text-green-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-sm truncate">
+                          {up.productName}
+                        </h3>
+                        <p className="text-xs text-soft-fg">
+                          ID: {up.productId.slice(0, 8)}...
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-sm truncate">
-                        {up.productName}
-                      </h3>
-                      <p className="text-xs text-soft-fg">
-                        ID: {up.productId.slice(0, 8)}...
-                      </p>
-                    </div>
+                    <Badge variant="secondary" className="shrink-0 text-xs">
+                      Active
+                    </Badge>
                   </div>
-                  <Badge variant="secondary" className="shrink-0 text-xs">
-                    Active
-                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full hover:bg-ink hover:text-page"
+                    disabled={downloadingId === up.productId}
+                    onClick={() => handleDownload(up.productId, up.productName)}
+                  >
+                    {downloadingId === up.productId ? (
+                      <svg className="size-4 animate-spin mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    ) : (
+                      <ArrowDownTrayIcon className="size-4 mr-1.5" />
+                    )}
+                    {downloadingId === up.productId ? 'Downloading...' : 'Download File'}
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>

@@ -3,88 +3,38 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/firebase';
 import { parseProduct } from '@/lib/firebase';
-import type { Product, ProductTag, ProductType, AuditLog } from '@/types';
+import type { AuditLog } from '@/types';
 
-export async function GET(req: NextRequest) {
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+export async function GET(_req: NextRequest, { params }: RouteParams) {
   try {
-    const { searchParams } = new URL(req.url);
-    const search = searchParams.get('search') || undefined;
-    const tags = searchParams.get('tags')?.split(',').filter(Boolean) as ProductTag[] | undefined;
-    const types = searchParams.get('types')?.split(',').filter(Boolean) as ProductType[] | undefined;
-    const priceMin = searchParams.get('priceMin')
-      ? parseFloat(searchParams.get('priceMin')!)
-      : undefined;
-    const priceMax = searchParams.get('priceMax')
-      ? parseFloat(searchParams.get('priceMax')!)
-      : undefined;
-    const boosterOnly = searchParams.get('boosterOnly') === 'true';
-    const showAll = searchParams.get('showAll') === 'true';
+    const { id } = await params;
 
-    const session = await getServerSession(authOptions);
-    const isOwner = session?.user?.role === 'owner';
+    const snapshot = await db.ref(`products/${id}`).once('value');
 
-    const snapshot = await db.ref('products').once('value');
-    const raw = snapshot.val() || {};
-
-    let products: Product[] = [];
-
-    for (const [id, data] of Object.entries(raw)) {
-      const product = parseProduct(id, data as Record<string, unknown>);
-
-      if (!product.active && !isOwner && !showAll) continue;
-
-      products.push(product);
-    }
-
-    if (search) {
-      const lowerSearch = search.toLowerCase();
-      products = products.filter(
-        (p) =>
-          p.name.toLowerCase().includes(lowerSearch) ||
-          p.description.toLowerCase().includes(lowerSearch) ||
-          p.maker.toLowerCase().includes(lowerSearch)
+    if (!snapshot.exists()) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
       );
     }
 
-    if (tags && tags.length > 0) {
-      products = products.filter((p) =>
-        tags.some((tag) => p.tags.includes(tag))
-      );
-    }
+    const product = parseProduct(id, snapshot.val() as Record<string, unknown>);
 
-    if (types && types.length > 0) {
-      products = products.filter((p) => types.includes(p.type));
-    }
-
-    if (priceMin !== undefined) {
-      products = products.filter((p) => p.price >= priceMin!);
-    }
-
-    if (priceMax !== undefined) {
-      products = products.filter((p) => p.price <= priceMax!);
-    }
-
-    if (boosterOnly) {
-      products = products.filter((p) => p.boosterExclusive);
-    }
-
-    products.sort((a, b) => {
-      const aTime = typeof a.createdAt === 'number' ? a.createdAt : new Date(a.createdAt).getTime();
-      const bTime = typeof b.createdAt === 'number' ? b.createdAt : new Date(b.createdAt).getTime();
-      return bTime - aTime;
-    });
-
-    return NextResponse.json(products);
+    return NextResponse.json(product);
   } catch (error) {
-    console.error('[GET /api/products] Error:', error);
+    console.error(`[GET /api/products/${id}] Error:`, error);
     return NextResponse.json(
-      { error: 'Failed to fetch products' },
+      { error: 'Failed to fetch product' },
       { status: 500 }
     );
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -95,126 +45,135 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { id } = await params;
+
+    const existingSnapshot = await db.ref(`products/${id}`).once('value');
+    if (!existingSnapshot.exists()) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
+    }
+
     const body = await req.json();
     const {
       name,
       description,
       price,
       gamepassId,
-      tags = [],
-      type = 'other',
-      images = { front: '', back: '' },
-      maker = '',
-      boosterExclusive = false,
-      announce = false,
-    } = body;
-
-    if (!name || typeof price !== 'number') {
-      return NextResponse.json(
-        { error: 'Name and price are required.' },
-        { status: 400 }
-      );
-    }
-
-    const productRef = db.ref('products').push();
-    const productId = productRef.key!;
-
-    const finalTags: ProductTag[] = announce
-      ? [...new Set([...tags, 'new'] as ProductTag[])]
-      : tags;
-
-    const productData: Omit<Product, 'id'> = {
-      name,
-      description: description || '',
-      price,
-      gamepassId: gamepassId || null,
-      active: true,
-      createdAt: Date.now(),
-      createdBy: session.user.discordId,
-      tags: finalTags,
+      active,
+      tags,
       type,
-      images: {
-        front: images.front || '',
-        back: images.back || '',
-      },
+      images,
       maker,
       boosterExclusive,
-    };
+    } = body;
 
-    await productRef.set(productData);
+    const updates: Record<string, unknown> = {};
 
-    if (announce) {
-      await db.ref('siteConfig/announcedProduct').set({
-        id: productId,
-        name,
-        description: description || '',
-        price,
-        type,
-        maker,
-        images,
-        announcedAt: Date.now(),
-      });
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (price !== undefined) updates.price = price;
+    if (gamepassId !== undefined) updates.gamepassId = gamepassId || null;
+    if (active !== undefined) updates.active = active;
+    if (tags !== undefined) updates.tags = tags;
+    if (type !== undefined) updates.type = type;
+    if (images !== undefined) updates.images = images;
+    if (maker !== undefined) updates.maker = maker;
+    if (boosterExclusive !== undefined) updates.boosterExclusive = boosterExclusive;
 
-      try {
-        const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-        if (!webhookUrl) {
-          console.warn('[POST /api/products] ⚠️ DISCORD_WEBHOOK_URL is not set. Discord announcement will be skipped. Add it to your Vercel environment variables.');
-        } else {
-          const webhookRes = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              embeds: [
-                {
-                  title: `🆕 New Product: ${name}`,
-                  description: description || 'No description provided.',
-                  color: 0x5865f2,
-                  fields: [
-                    { name: 'Price', value: `R$${price}`, inline: true },
-                    { name: 'Type', value: type, inline: true },
-                    { name: 'Maker', value: maker || 'Unknown', inline: true },
-                    { name: 'Booster Exclusive', value: boosterExclusive ? 'Yes' : 'No', inline: true },
-                    { name: 'Tags', value: finalTags.length > 0 ? finalTags.join(', ') : 'None', inline: true },
-                  ],
-                  image: images.front
-                    ? { url: images.front }
-                    : undefined,
-                  timestamp: new Date().toISOString(),
-                },
-              ],
-            }),
-          });
-          if (!webhookRes.ok) {
-            const errBody = await webhookRes.text().catch(() => '');
-            console.error(`[POST /api/products] Webhook returned ${webhookRes.status}: ${errBody}`);
-          } else {
-            console.log(`[POST /api/products] ✅ Discord webhook sent successfully for "${name}"`);
-          }
-        }
-      } catch (webhookError) {
-        console.error('[POST /api/products] Webhook error:', webhookError);
-      }
-    }
+    await db.ref(`products/${id}`).update(updates);
 
     const auditRef = db.ref('auditLogs').push();
     const auditLog: Omit<AuditLog, 'id'> = {
-      action: 'create_product',
+      action: 'edit_product',
       performedBy: session.user.discordId,
       performedByRole: session.user.role,
-      targetProductId: productId,
-      details: `Created product "${name}" (ID: ${productId})${announce ? ' with announcement' : ''}`,
+      targetProductId: id,
+      details: `Edited product "${name || id}" (ID: ${id}). Fields: ${Object.keys(updates).join(', ')}`,
       createdAt: Date.now(),
     };
     await auditRef.set(auditLog);
 
-    return NextResponse.json(
-      { id: productId, ...productData },
-      { status: 201 }
-    );
+    const updatedSnapshot = await db.ref(`products/${id}`).once('value');
+    const updatedProduct = parseProduct(id, updatedSnapshot.val() as Record<string, unknown>);
+
+    return NextResponse.json(updatedProduct);
   } catch (error) {
-    console.error('[POST /api/products] Error:', error);
+    console.error(`[PUT /api/products/${id}] Error:`, error);
     return NextResponse.json(
-      { error: 'Failed to create product' },
+      { error: 'Failed to update product' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(_req: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== 'owner') {
+      return NextResponse.json(
+        { error: 'Unauthorized. Owner access required.' },
+        { status: 403 }
+      );
+    }
+
+    const { id } = await params;
+
+    const existingSnapshot = await db.ref(`products/${id}`).once('value');
+    if (!existingSnapshot.exists()) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
+    }
+
+    const existingData = existingSnapshot.val() as Record<string, unknown>;
+    const productName = (existingData.name as string) || id;
+
+    // Permanently delete the product from Firebase
+    await db.ref(`products/${id}`).remove();
+
+    // Also remove the attached RBXM file if it exists
+    try {
+      await db.ref(`rbxmFiles/${id}`).remove();
+    } catch (fileErr) {
+      console.warn(`[DELETE /api/products/${id}] Failed to remove attached file:`, fileErr);
+    }
+
+    // Clear announcement if this was the announced product
+    try {
+      const announcedSnapshot = await db.ref('siteConfig/announcedProduct').once('value');
+      if (announcedSnapshot.exists()) {
+        const announced = announcedSnapshot.val() as Record<string, unknown>;
+        if (announced.id === id) {
+          await db.ref('siteConfig/announcedProduct').remove();
+        }
+      }
+    } catch (announceErr) {
+      console.warn(`[DELETE /api/products/${id}] Failed to clear announcedProduct:`, announceErr);
+    }
+
+    const auditRef = db.ref('auditLogs').push();
+    const auditLog: Omit<AuditLog, 'id'> = {
+      action: 'delete_product',
+      performedBy: session.user.discordId,
+      performedByRole: session.user.role,
+      targetProductId: id,
+      details: `Permanently deleted product "${productName}" (ID: ${id})`,
+      createdAt: Date.now(),
+    };
+    await auditRef.set(auditLog);
+
+    return NextResponse.json({
+      message: `Product "${productName}" has been permanently deleted.`,
+      id,
+    });
+  } catch (error) {
+    console.error(`[DELETE /api/products/${id}] Error:`, error);
+    return NextResponse.json(
+      { error: 'Failed to delete product' },
       { status: 500 }
     );
   }
