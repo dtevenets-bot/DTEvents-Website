@@ -50,7 +50,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product, ProductTag, ProductType } from '@/types';
 
-const ALL_TAGS: ProductTag[] = ['new', 'popular', 'limited', 'sale', 'featured', 'exclusive'];
+const ALL_TAGS: ProductTag[] = ['new', 'popular', 'limited', 'sale', 'featured', 'exclusive', 'free'];
 const ALL_TYPES: ProductType[] = ['gamepass', 'asset', 'plugin', 'tool', 'other'];
 
 const TOTAL_STEPS = 5;
@@ -314,13 +314,21 @@ export function OwnerPanel() {
     // Final step — save the product
     setSaving(true);
     try {
+      // Auto-add 'free' tag if price is 0, remove if price > 0
+      let finalTags = [...form.tags];
+      if (form.price === 0 && !finalTags.includes('free')) {
+        finalTags.push('free');
+      } else if (form.price > 0 && finalTags.includes('free')) {
+        finalTags = finalTags.filter((t) => t !== 'free');
+      }
+
       const payload = {
         name: form.name,
         description: form.description,
         price: form.price,
         gamepassId: form.gamepassId,
         type: form.type,
-        tags: form.tags,
+        tags: finalTags,
         images: { front: form.frontImage, back: form.backImage },
         maker: form.maker,
         boosterExclusive: form.boosterExclusive,
@@ -928,8 +936,8 @@ export function OwnerPanel() {
             </DialogTitle>
             <DialogDescription>
               {deleteStep === 0
-                ? 'This action will permanently delete the product. Please type the product name to confirm.'
-                : 'Final confirmation required. Type CONFIRM to proceed.'}
+                ? 'This will permanently delete the product and remove it from all users who own it. Type the product name to confirm.'
+                : 'Final confirmation required. Type CONFIRM to proceed. This cannot be undone.'}
             </DialogDescription>
           </DialogHeader>
 

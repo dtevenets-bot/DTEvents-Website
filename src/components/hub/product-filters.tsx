@@ -19,7 +19,7 @@ interface ProductFiltersProps {
   onFilterChange: (filters: ProductFilters) => void;
 }
 
-const allTags: ProductTag[] = ['new', 'popular', 'limited', 'sale', 'featured', 'exclusive'];
+const allTags: ProductTag[] = ['new', 'popular', 'limited', 'sale', 'featured', 'exclusive', 'free'];
 const allTypes: ProductType[] = ['gamepass', 'asset', 'plugin', 'tool', 'other'];
 
 export function ProductFilters({ onFilterChange }: ProductFiltersProps) {

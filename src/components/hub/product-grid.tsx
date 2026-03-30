@@ -141,7 +141,9 @@ export function ProductGrid({ boosterOnly = false, showFilters = true }: Product
                           <Badge
                             key={tag}
                             variant="outline"
-                            className="text-[10px] group-hover:border-page/30 group-hover:text-page"
+                            className={`text-[10px] group-hover:border-page/30 group-hover:text-page ${
+                              tag === 'free' ? 'bg-green-500/15 text-green-500 border-green-500/20 group-hover:text-green-500 group-hover:border-green-500/30' : ''
+                            }`}
                           >
                             {tag}
                           </Badge>

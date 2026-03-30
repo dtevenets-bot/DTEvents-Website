@@ -27,7 +27,7 @@ export interface VerificationData {
   expiresAt: number;
 }
 
-export type ProductTag = 'new' | 'popular' | 'limited' | 'sale' | 'featured' | 'exclusive';
+export type ProductTag = 'new' | 'popular' | 'limited' | 'sale' | 'featured' | 'exclusive' | 'free';
 
 export type ProductType = 'gamepass' | 'asset' | 'plugin' | 'tool' | 'other';
 

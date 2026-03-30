@@ -135,11 +135,56 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     // Permanently delete the product from Firebase
     await db.ref(`products/${id}`).remove();
 
-    // Also remove the attached RBXM file if it exists
+    // Remove the attached RBXM file if it exists
     try {
       await db.ref(`rbxmFiles/${id}`).remove();
     } catch (fileErr) {
       console.warn(`[DELETE /api/products/${id}] Failed to remove attached file:`, fileErr);
+    }
+
+    // Cascade: remove all userProducts entries for this product
+    try {
+      const userProductsSnapshot = await db.ref('userProducts').once('value');
+      if (userProductsSnapshot.exists()) {
+        const updates: Record<string, null> = {};
+        const allUserProducts = userProductsSnapshot.val() as Record<string, Record<string, unknown>>;
+        for (const [upId, data] of Object.entries(allUserProducts)) {
+          if (data.productId === id) {
+            updates[upId] = null;
+          }
+        }
+        if (Object.keys(updates).length > 0) {
+          await db.ref('userProducts').update(updates);
+          console.log(`[DELETE /api/products/${id}] Removed ${Object.keys(updates).length} userProducts entries.`);
+        }
+      }
+    } catch (upErr) {
+      console.warn(`[DELETE /api/products/${id}] Failed to cascade delete userProducts:`, upErr);
+    }
+
+    // Cascade: remove product from all tempCarts
+    try {
+      const cartsSnapshot = await db.ref('tempCarts').once('value');
+      if (cartsSnapshot.exists()) {
+        const carts = cartsSnapshot.val() as Record<string, Record<string, unknown>>;
+        for (const [userId, cart] of Object.entries(carts)) {
+          const items = cart.items as Array<{ productId: string }> | undefined;
+          if (items && Array.isArray(items)) {
+            const hasProduct = items.some((item) => item.productId === id);
+            if (hasProduct) {
+              const filteredItems = items.filter((item) => item.productId !== id);
+              if (filteredItems.length === 0) {
+                await db.ref(`tempCarts/${userId}`).remove();
+              } else {
+                await db.ref(`tempCarts/${userId}/items`).set(filteredItems);
+              }
+            }
+          }
+        }
+        console.log(`[DELETE /api/products/${id}] Cleaned up product from all tempCarts.`);
+      }
+    } catch (cartErr) {
+      console.warn(`[DELETE /api/products/${id}] Failed to cascade delete from tempCarts:`, cartErr);
     }
 
     // Clear announcement if this was the announced product
@@ -167,7 +212,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     await auditRef.set(auditLog);
 
     return NextResponse.json({
-      message: `Product "${productName}" has been permanently deleted.`,
+      message: `Product "${productName}" has been permanently deleted, including all user ownership records and cart entries.`,
       id,
     });
   } catch (error) {
