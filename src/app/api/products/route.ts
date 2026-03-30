@@ -157,8 +157,10 @@ export async function POST(req: NextRequest) {
 
       try {
         const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-        if (webhookUrl) {
-          await fetch(webhookUrl, {
+        if (!webhookUrl) {
+          console.warn('[POST /api/products] ⚠️ DISCORD_WEBHOOK_URL is not set. Discord announcement will be skipped. Add it to your Vercel environment variables.');
+        } else {
+          const webhookRes = await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -171,6 +173,8 @@ export async function POST(req: NextRequest) {
                     { name: 'Price', value: `R$${price}`, inline: true },
                     { name: 'Type', value: type, inline: true },
                     { name: 'Maker', value: maker || 'Unknown', inline: true },
+                    { name: 'Booster Exclusive', value: boosterExclusive ? 'Yes' : 'No', inline: true },
+                    { name: 'Tags', value: finalTags.length > 0 ? finalTags.join(', ') : 'None', inline: true },
                   ],
                   image: images.front
                     ? { url: images.front }
@@ -180,6 +184,12 @@ export async function POST(req: NextRequest) {
               ],
             }),
           });
+          if (!webhookRes.ok) {
+            const errBody = await webhookRes.text().catch(() => '');
+            console.error(`[POST /api/products] Webhook returned ${webhookRes.status}: ${errBody}`);
+          } else {
+            console.log(`[POST /api/products] ✅ Discord webhook sent successfully for "${name}"`);
+          }
         }
       } catch (webhookError) {
         console.error('[POST /api/products] Webhook error:', webhookError);

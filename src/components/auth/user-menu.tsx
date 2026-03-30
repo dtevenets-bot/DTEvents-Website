@@ -21,6 +21,7 @@ import {
   ArrowLeftOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '@/stores/auth-store';
+import type { HubTab } from '@/components/hub/hub-navigation';
 
 export function UserMenu() {
   const { data: session } = useSession();
@@ -32,6 +33,10 @@ export function UserMenu() {
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/' });
+  };
+
+  const navigateToHub = (tab: HubTab) => {
+    window.dispatchEvent(new CustomEvent('navigate-to-hub', { detail: { tab } }));
   };
 
   if (!session || !isAuthenticated) {
@@ -68,27 +73,22 @@ export function UserMenu() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem>
-          <UserIcon className="size-4 mr-2" />
-          Profile
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigateToHub('products')}>
           <CubeIcon className="size-4 mr-2" />
           Products
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigateToHub('my-products')}>
           <ShoppingBagIcon className="size-4 mr-2" />
           My Products
         </DropdownMenuItem>
         {isAdmin() && (
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigateToHub('admin')}>
             <ShieldCheckIcon className="size-4 mr-2" />
             Admin
           </DropdownMenuItem>
         )}
         {isOwner() && (
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigateToHub('manage')}>
             <Cog6ToothIcon className="size-4 mr-2" />
             Manage
           </DropdownMenuItem>

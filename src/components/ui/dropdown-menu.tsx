@@ -79,7 +79,7 @@ function DropdownMenuContent({
   align?: "start" | "center" | "end"
 }) {
   const { open, setOpen, triggerRef } = React.useContext(DropdownMenuContext)
-  const [position, setPosition] = React.useState({ top: 0, left: 0 })
+  const [position, setPosition] = React.useState({ top: 0, left: 0, right: 0 })
   const [mounted, setMounted] = React.useState(false)
   const contentRef = React.useRef<HTMLDivElement>(null)
 
@@ -91,16 +91,29 @@ function DropdownMenuContent({
     if (!open || !triggerRef.current) return
 
     const trigger = triggerRef.current.getBoundingClientRect()
-    let top = trigger.bottom + sideOffset
-    let left = trigger.left
+    const top = trigger.bottom + sideOffset
+    const vw = window.innerWidth
 
-    if (align === "center") {
-      left = trigger.left + trigger.width / 2
-    } else if (align === "end") {
-      left = trigger.right
+    if (align === "end") {
+      // Anchor the right edge of the menu to the right edge of the trigger
+      setPosition({
+        top,
+        left: 0,
+        right: vw - trigger.right,
+      })
+    } else if (align === "center") {
+      setPosition({
+        top,
+        left: trigger.left + trigger.width / 2,
+        right: 0,
+      })
+    } else {
+      setPosition({
+        top,
+        left: trigger.left,
+        right: 0,
+      })
     }
-
-    setPosition({ top, left })
   }, [open, sideOffset, align, triggerRef])
 
   React.useEffect(() => {
@@ -134,12 +147,19 @@ function DropdownMenuContent({
 
   if (!mounted || !open) return null
 
-  const alignClass =
-    align === "end"
-      ? "right-0"
-      : align === "center"
-        ? "left-1/2 -translate-x-1/2"
-        : "left-0"
+  const style: React.CSSProperties = {
+    position: "fixed",
+    top: position.top,
+  }
+
+  if (align === "end") {
+    style.right = position.right
+  } else if (align === "center") {
+    style.left = position.left
+    style.transform = "translateX(-50%)"
+  } else {
+    style.left = position.left
+  }
 
   const content = (
     <div
@@ -147,14 +167,9 @@ function DropdownMenuContent({
       role="menu"
       className={cx(
         "bg-popup text-popup-fg z-50 min-w-[8rem] overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md animate-in fade-in-0 zoom-in-95",
-        alignClass,
         className
       )}
-      style={{
-        position: "fixed",
-        top: position.top,
-        left: position.left,
-      }}
+      style={style}
       {...props}
     >
       {children}

@@ -95,7 +95,7 @@ export interface TempCart {
 
 export interface AuditLog {
   id: string;
-  action: 'grant' | 'revoke' | 'create_product' | 'edit_product' | 'delete_product' | 'announce_product';
+  action: 'grant' | 'revoke' | 'create_product' | 'edit_product' | 'delete_product' | 'announce_product' | 'upload_file' | 'delete_file';
   performedBy: string;
   performedByRole: UserRole;
   targetUserId?: string;

@@ -637,11 +637,11 @@ export function OwnerPanel() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-err">
               <TrashIcon className="size-5" />
-              Deactivate Product
+              Delete Product
             </DialogTitle>
             <DialogDescription>
               {deleteStep === 0
-                ? 'This action will deactivate the product. Please type the product name to confirm.'
+                ? 'This action will permanently delete the product. Please type the product name to confirm.'
                 : 'Final confirmation required. Type CONFIRM to proceed.'}
             </DialogDescription>
           </DialogHeader>
@@ -680,7 +680,7 @@ export function OwnerPanel() {
               {deleteStep === 1 && (
                 <div className="space-y-2">
                   <Label htmlFor="delete-confirm-input">
-                    Type <span className="font-semibold">CONFIRM</span> to permanently deactivate
+                    Type <span className="font-semibold">CONFIRM</span> to permanently delete
                   </Label>
                   <Input
                     id="delete-confirm-input"
@@ -720,7 +720,7 @@ export function OwnerPanel() {
                 onClick={confirmDelete}
               >
                 {deleting && <ArrowPathIcon className="size-4 animate-spin mr-1" />}
-                {deleting ? 'Deactivating...' : 'Deactivate Product'}
+                {deleting ? 'Deleting...' : 'Delete Product'}
               </Button>
             )}
           </DialogFooter>

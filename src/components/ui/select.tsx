@@ -12,6 +12,8 @@ interface SelectContextValue {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
   triggerRef: React.MutableRefObject<HTMLButtonElement | null>
   contentId: string
+  multiple?: boolean
+  selectedValues?: string[]
 }
 
 const SelectContext = React.createContext<SelectContextValue>({
@@ -21,6 +23,8 @@ const SelectContext = React.createContext<SelectContextValue>({
   setOpen: () => {},
   triggerRef: { current: null },
   contentId: "",
+  multiple: false,
+  selectedValues: [],
 })
 
 let selectIdCounter = 0
@@ -32,11 +36,15 @@ function Select({
   value,
   onValueChange,
   defaultValue,
+  multiple = false,
+  selectedValues,
   children,
 }: {
   value?: string
   onValueChange?: (value: string) => void
   defaultValue?: string
+  multiple?: boolean
+  selectedValues?: string[]
   children: React.ReactNode
 }) {
   const [internalValue, setInternalValue] = React.useState(defaultValue ?? "")
@@ -50,9 +58,9 @@ function Select({
     (newValue: string) => {
       if (value === undefined) setInternalValue(newValue)
       onValueChange?.(newValue)
-      setOpen(false)
+      if (!multiple) setOpen(false)
     },
-    [value, onValueChange]
+    [value, onValueChange, multiple]
   )
 
   return (
@@ -64,6 +72,8 @@ function Select({
         setOpen,
         triggerRef,
         contentId,
+        multiple,
+        selectedValues: selectedValues ?? [],
       }}
     >
       {children}
@@ -88,6 +98,7 @@ function SelectTrigger({
       role="combobox"
       aria-expanded={open}
       aria-controls={contentId}
+      aria-multiselectable={undefined}
       onClick={() => setOpen(!open)}
       className={cx(
         "border-field data-[placeholder]:text-soft-fg [&_svg:not([class*='text-'])]:text-soft-fg focus-visible:border-focus-ring focus-visible:ring-focus-ring/50 aria-invalid:ring-err/20 dark:aria-invalid:ring-err/40 aria-invalid:border-err dark:bg-field/30 dark:hover:bg-field/50 flex w-fit items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 h-9",
@@ -122,10 +133,23 @@ function SelectValue({
   placeholder?: string
   className?: string
 }) {
-  const { value } = React.useContext(SelectContext)
+  const ctx = React.useContext(SelectContext)
+
+  if (ctx.multiple && ctx.selectedValues.length > 0) {
+    const label =
+      ctx.selectedValues.length === 1
+        ? ctx.selectedValues[0]
+        : `${ctx.selectedValues.length} selected`
+    return (
+      <span className={cx("flex items-center gap-2 line-clamp-1", className)}>
+        {label}
+      </span>
+    )
+  }
+
   return (
     <span className={cx("flex items-center gap-2 line-clamp-1", className)}>
-      {value ? value : placeholder}
+      {ctx.value ? ctx.value : placeholder}
     </span>
   )
 }
@@ -185,6 +209,7 @@ function SelectContent({
       ref={contentRef}
       id={contentId}
       role="listbox"
+      aria-multiselectable={undefined}
       className={cx(
         "bg-popup text-popup-fg relative z-50 max-h-96 min-w-[8rem] overflow-x-hidden overflow-y-auto rounded-md border shadow-md animate-in fade-in-0 zoom-in-95 p-1",
         className
@@ -215,7 +240,9 @@ function SelectItem({
   ...props
 }: React.ComponentProps<"div"> & { value: string }) {
   const ctx = React.useContext(SelectContext)
-  const isSelected = ctx.value === itemValue
+  const isSelected = ctx.multiple
+    ? ctx.selectedValues.includes(itemValue)
+    : ctx.value === itemValue
 
   return (
     <div

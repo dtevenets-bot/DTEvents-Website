@@ -132,12 +132,10 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     const existingData = existingSnapshot.val() as Record<string, unknown>;
     const productName = (existingData.name as string) || id;
 
-    await db.ref(`products/${id}`).update({
-      active: false,
-      deletedAt: Date.now(),
-      deletedBy: session.user.discordId,
-    });
+    // Permanently delete the product from Firebase
+    await db.ref(`products/${id}`).remove();
 
+    // Clear announcement if this was the announced product
     try {
       const announcedSnapshot = await db.ref('siteConfig/announcedProduct').once('value');
       if (announcedSnapshot.exists()) {
@@ -156,13 +154,13 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
       performedBy: session.user.discordId,
       performedByRole: session.user.role,
       targetProductId: id,
-      details: `Soft-deleted product "${productName}" (ID: ${id})`,
+      details: `Permanently deleted product "${productName}" (ID: ${id})`,
       createdAt: Date.now(),
     };
     await auditRef.set(auditLog);
 
     return NextResponse.json({
-      message: `Product "${productName}" has been deactivated.`,
+      message: `Product "${productName}" has been permanently deleted.`,
       id,
     });
   } catch (error) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -56,8 +56,8 @@ function LandingView() {
   );
 }
 
-function HubView({ onGoHome }: { onGoHome: () => void }) {
-  const [activeTab, setActiveTab] = useState<HubTab>('products');
+function HubView({ initialTab, onGoHome }: { initialTab: HubTab; onGoHome: () => void }) {
+  const [activeTab, setActiveTab] = useState<HubTab>(initialTab);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -91,6 +91,7 @@ export default function Home() {
   const { setAuth, setLoading, logout } = useAuthStore();
 
   const [userPickedLanding, setUserPickedLanding] = useState(false);
+  const [hubInitialTab, setHubInitialTab] = useState<HubTab>('products');
 
   useEffect(() => {
     if (status === 'loading') {
@@ -112,6 +113,16 @@ export default function Home() {
     }
   }, [session, status, setAuth, setLoading, logout]);
 
+  const handleNavigateToHub = useCallback((e: CustomEvent<{ tab: HubTab }>) => {
+    setHubInitialTab(e.detail.tab);
+    setUserPickedLanding(false);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('navigate-to-hub', handleNavigateToHub as EventListener);
+    return () => window.removeEventListener('navigate-to-hub', handleNavigateToHub as EventListener);
+  }, [handleNavigateToHub]);
+
   const showLanding = useMemo(() => {
     if (status === 'loading') return false;
     if (!session?.user) return true;
@@ -130,5 +141,5 @@ export default function Home() {
     return <LandingView />;
   }
 
-  return <HubView onGoHome={handleGoHome} />;
+  return <HubView initialTab={hubInitialTab} onGoHome={handleGoHome} />;
 }

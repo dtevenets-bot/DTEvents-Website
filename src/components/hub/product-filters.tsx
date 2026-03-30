@@ -5,6 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import type { ProductFilters, ProductTag, ProductType } from '@/types';
 
@@ -92,35 +99,22 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
 
       <div className="space-y-2">
         <Label className="text-xs font-medium text-soft-fg">Type</Label>
-        <div className="flex flex-wrap gap-2">
-          {allTypes.map((type) => (
-            <label
-              key={type}
-              className="flex items-center gap-1.5 cursor-pointer"
-            >
-              <Checkbox
-                checked={selectedTypes.includes(type)}
-                onCheckedChange={() => toggleType(type)}
-              />
-              <span className="text-xs capitalize">{type}</span>
-            </label>
-          ))}
-        </div>
-        {selectedTypes.length > 1 && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {selectedTypes.map((type) => (
-              <button
-                key={type}
-                onClick={() => {
-                  toggleType(type);
-                }}
-                className="text-[10px] px-2 py-0.5 border rounded-full hover:bg-ink hover:text-page transition-colors"
-              >
-                {type} ×
-              </button>
+        <Select
+          multiple
+          selectedValues={selectedTypes}
+          onValueChange={(val) => toggleType(val as ProductType)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="All types" />
+          </SelectTrigger>
+          <SelectContent>
+            {allTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </SelectItem>
             ))}
-          </div>
-        )}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
