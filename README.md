@@ -1,237 +1,215 @@
-# DT Events Website - Complete Owner Guide
+# DT Events — Daniel's Guide
 
-> **Welcome!** This guide is written for someone with **zero coding experience**. Every single step is explained in plain English. If something is confusing, read it again slowly — it will make sense.
-
----
-
-## Table of Contents
-
-1. [What Is This Project?](#what-is-this-project)
-2. [How the Whole System Works (Big Picture)](#how-the-whole-system-works-big-picture)
-3. [Accounts You Need to Create](#accounts-you-need-to-create)
-4. [Environment Variables Explained](#environment-variables-explained)
-5. [Step-by-Step: Set Up Firebase](#step-by-step-set-up-firebase)
-6. [Step-by-Step: Get Your Firebase Service Account Key](#step-by-step-get-your-firebase-service-account-key)
-7. [Step-by-Step: Set Firebase Database Rules](#step-by-step-set-firebase-database-rules)
-8. [Step-by-Step: Create a Discord Webhook](#step-by-step-create-a-discord-webhook)
-9. [Step-by-Step: Create a Discord Bot](#step-by-step-create-a-discord-bot)
-10. [Step-by-Step: Deploy on Vercel](#step-by-step-deploy-on-vercel)
-11. [Step-by-Step: Generate a NextAuth Secret](#step-by-step-generate-a-nextauth-secret)
-12. [How the Login System Works](#how-the-login-system-works)
-13. [How the Product System Works](#how-the-product-system-works)
-14. [Key Features Overview](#key-features-overview)
-15. [Project Structure (What Each Folder Does)](#project-structure-what-each-folder-does)
-16. [Troubleshooting Common Problems](#troubleshooting-common-problems)
-17. [Daily Operations Guide](#daily-operations-guide)
-18. [Important Things to Remember](#important-things-to-remember)
+> yo daniel its johan. i wrote this whole thing step by step for you so read it carefully. dont skip anything. if something is confusing or you didnt get it ask me dont just guess and break stuff 😭
 
 ---
 
-## What Is This Project?
+## what even is this project
 
-This is a **website that sells Roblox products** — specifically DJ equipment models (like Pioneer DJM-V10, GLP Burst, etc.). People visit the website, browse products, buy them through Roblox gamepasses, and then download the files to use in their Roblox games.
+ok so basically we have 3 things that work together:
 
-**The tech stack (what the site is built with):**
+| Thing | What It Does | Where It Lives |
+|-------|-------------|----------------|
+| **Website** | the store where people browse and buy products | hosted on Vercel (automatically deploys from github) |
+| **Discord Bot** | handles login codes, account linking, giving products, all the slash commands | hosted on JustRunMy.App (runs 24/7 in a docker container) |
+| **Roblox Hub** | the in-game store where people actually buy stuff with robux | inside Roblox Studio (published as a game) |
 
-| Technology | What It Does | Where It Lives |
-|---|---|---|
-| **Next.js 16** | The website framework (makes the web pages work) | Runs on Vercel |
-| **TypeScript** | A safer way to write JavaScript (the programming language) | Inside the code |
-| **Tailwind CSS** | Makes the website look good (styling) | Inside the code |
-| **shadcn/ui** | Pre-built UI components (buttons, cards, etc.) | Inside the code |
-| **Firebase Realtime Database** | Stores ALL data (products, users, carts, files) | Google's servers |
-| **Vercel** | Hosts the website (puts it on the internet) | vercel.com |
-| **Discord Bot** | Handles user login and verification | Runs separately |
+they all talk to the same Firebase database so when someone buys something on the website the bot knows about it and the roblox game knows about it. they all share the same data.
 
----
-
-## How the Whole System Works (Big Picture)
-
-Think of the system as a chain of connected pieces:
-
-```
-User visits website (hosted on Vercel)
-        |
-        v
-Website loads products from Firebase Database
-        |
-        v
-User wants to log in → Discord Bot sends them a code
-        |
-        v
-User enters code on website → verified!
-        |
-        v
-User browses products, adds to cart, checks out
-        |
-        v
-Checkout redirects to Roblox gamepass purchase
-        |
-        v
-After purchase, user can download .rbxm files
-        |
-        v
-Discord webhook announces new products automatically
-```
-
-**None of this works without the environment variables (secret keys) set up correctly on Vercel.** That is the #1 thing to get right.
+**the 3 github repos are:**
+- `https://github.com/J-ohan1/DTEvents-Website`
+- `https://github.com/J-ohan1/DTEvents-Bot`
+- `https://github.com/J-ohan1/DTEvents-RobloxHub`
 
 ---
 
-## Accounts You Need to Create
+## accounts you need
 
-You need **5 accounts** to run this project. Create all of these before doing anything else:
+before we do anything you need these accounts. go make all of them right now:
 
-### 1. GitHub Account
-- **Website:** https://github.com
-- **What it does:** Stores your code. Every time you make changes, they go here first.
-- **Why you need it:** Vercel reads the code from GitHub to deploy the website.
+1. **GitHub** — https://github.com (where all the code lives, you need this to clone and push)
+2. **Vercel** — https://vercel.com (hosts the website, sign up with your github account)
+3. **Firebase** — https://console.firebase.google.com (the database, sign in with google)
+4. **Discord Developer Portal** — https://discord.com/developers/applications (for the bot)
+5. **JustRunMy.App** — https://justrunmy.app (runs the bot 24/7)
 
-### 2. Firebase Account (by Google)
-- **Website:** https://console.firebase.google.com
-- **What it does:** Stores all your data — products, users, carts, files, everything.
-- **Why you need it:** The website cannot function without a database.
-
-### 3. Vercel Account
-- **Website:** https://vercel.com
-- **What it does:** Puts your website on the internet so anyone can visit it.
-- **Why you need it:** This is where the website actually lives and runs.
-
-### 4. Discord Developer Account
-- **Website:** https://discord.com/developers/applications
-- **What it does:** Lets you create a Discord bot that handles user login.
-- **Why you need it:** Users log in through Discord, not a regular username/password.
-
-### 5. Roblox Account
-- **Website:** https://roblox.com
-- **What it does:** Where you create gamepasses for paid products.
-- **Why you need it:** Paid products use Roblox gamepasses for payment.
+you probably already have most of these since we set them up together but just making sure.
 
 ---
 
-## Environment Variables Explained
+## things you need to install on your computer
 
-**"Environment variables"** are just secret keys/passwords that the website needs to work. Think of them like login credentials — the website uses them to connect to Firebase, Discord, etc.
+ok so before you touch any code you need to install these 3 things. do them in order.
 
-You set these in **Vercel** (not in the code, not in a text file — only in Vercel's dashboard).
+### 1. Visual Studio Code (VS Code)
 
-### Where to add them on Vercel:
-1. Go to your Vercel dashboard
-2. Click your project
-3. Go to **Settings** → **Environment Variables**
-4. Add each one exactly as shown below
+this is where you edit all the code. its free.
 
-### Firebase Variables (REQUIRED — the site will NOT start without these):
+1. go to https://code.visualstudio.com
+2. click the big download button
+3. run the installer, just click next through everything, default settings are fine
+4. open it up after its installed
 
-| Variable Name | What It Is | Where to Find It |
-|---|---|---|
-| `FIREBASE_PROJECT_ID` | Your Firebase project's ID | Firebase Console → Project Settings (gear icon) → General tab |
-| `FIREBASE_CLIENT_EMAIL` | Email for server access | Firebase Admin SDK service account (see guide below) |
-| `FIREBASE_PRIVATE_KEY` | Private key for server access | Firebase Admin SDK service account (see guide below) |
-| `FIREBASE_DATABASE_URL` | URL to your database | Firebase Console → Realtime Database → it looks like `https://your-project-default-rtdb.firebaseio.com` |
+### 2. Git
 
-### Discord Variables:
+this is what lets you download the code from github and push changes back up.
 
-| Variable Name | What It Is | Where to Find It |
-|---|---|---|
-| `DISCORD_WEBHOOK_URL` | URL to send messages to your Discord channel | Discord server settings → Integrations → Webhooks (see guide below) |
+1. go to https://git-scm.com/downloads
+2. download it for windows
+3. run the installer, again just next through everything
+4. after its installed open vs code, press **Ctrl + `** (thats the key above tab, next to the 1 key), a terminal should open at the bottom
+5. type `git --version` and press enter. if you see a version number like `2.43.0` then its installed correctly. if it says "command not found" then restart your computer and try again.
 
-### Roblox Variables:
+### 3. Node.js
 
-| Variable Name | What It Is | Where to Find It |
-|---|---|---|
-| `NEXT_PUBLIC_ROBLOX_HUB_URL` | The URL to your Roblox game/hub | Any Roblox game link (starts with `https://www.roblox.com/games/...`) |
+the website and the bot both need this to run. it comes with npm which installs all the libraries.
 
-**NOTE:** This one starts with `NEXT_PUBLIC_` — that means it's safe to share (it shows up in the browser). All other variables are SECRET and should never be shared.
+1. go to https://nodejs.org
+2. download the **LTS** version (the big green button that says "Recommended for Most Users")
+3. run the installer, next through everything
+4. after its installed open a terminal in vs code (Ctrl + `)
+5. type `node --version` and press enter. you should see something like `v20.x.x` or `v22.x.x`
+6. then type `npm --version` and press enter. you should see something like `10.x.x`
 
-### NextAuth Variables (for session security):
-
-| Variable Name | What It Is | How to Get It |
-|---|---|---|
-| `NEXTAUTH_SECRET` | A random string that encrypts user sessions | Run this command in your terminal: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
-| `NEXTAUTH_URL` | Your website's URL | e.g. `https://dt-events.vercel.app` |
+if both of those show version numbers youre good.
 
 ---
 
-## Step-by-Step: Set Up Firebase
+## setting up your folders
 
-### Step 1: Create a Firebase Project
-1. Go to https://console.firebase.google.com
-2. Sign in with your Google account
-3. Click **"Create a project"** (or "Add project")
-4. Give it a name (e.g. "DT Events")
-5. You can disable Google Analytics if you want (not needed)
-6. Click **Create project**
-7. Wait for it to finish (takes about 30 seconds)
+alr so now youre going to create a main folder for everything and clone the 3 repos into it. follow this exactly.
 
-### Step 2: Create a Realtime Database
-1. In your Firebase project, look at the left sidebar
-2. Click **"Build"** → **"Realtime Database"**
-3. Click **"Create Database"**
-4. Choose a location (pick the one closest to your users)
-5. **IMPORTANT:** Select **"Start in test mode"** for now (we'll set proper rules later)
-6. Click **Enable**
+### step 1: create the main folder
 
-### Step 3: Copy Your Database URL
-1. At the top of the Realtime Database page, you'll see a URL like:
-   `https://your-project-name-default-rtdb.firebaseio.com`
-2. Copy this entire URL — this is your `FIREBASE_DATABASE_URL`
+1. open **File Explorer** (the yellow folder icon in your taskbar)
+2. go to your **Documents** folder (or wherever you want to keep this stuff)
+3. right click in the empty space → **New** → **Folder**
+4. name it **DTEvents**
 
-### Step 4: Copy Your Project ID
-1. Click the **gear icon** (top left, near "Project Overview") → **"Project settings"**
-2. Under the "General" tab, you'll see your **Project ID**
-3. Copy this — this is your `FIREBASE_PROJECT_ID`
+### step 2: open it in VS Code
 
----
+1. open **Visual Studio Code**
+2. look at the very top left of the window, you'll see a tab that says **File**
+3. click **File** → **Open Folder...**
+4. a window will pop up — navigate to the **DTEvents** folder you just created
+5. click **Select Folder** (the button at the bottom right of the window)
+6. you should see "DTEvents" in the top left corner of vs code now
 
-## Step-by-Step: Get Your Firebase Service Account Key
+### step 3: open the terminal
 
-This gives the website permission to read and write to your Firebase database. **Do NOT share this key with anyone.**
+press **Ctrl + `** — a terminal panel opens at the bottom of vs code. you'll be using this a lot so dont close it.
 
-1. Go to **Firebase Console** → your project
-2. Click the **gear icon** (top left) → **"Project settings"**
-3. Click the **"Service accounts"** tab at the top
-4. You'll see a section called "Firebase Admin SDK"
-5. Click the **dropdown** that shows your language options (JavaScript, Python, etc.)
-6. Click the button that says **"Generate new private key"**
-7. A warning will pop up — click **"Generate key"**
-8. A JSON file will download to your computer (something like `your-project-firebase-adminsdk-abc123.json`)
-9. Open this file with any text editor (Notepad on Windows, TextEdit on Mac)
-10. You will see something like this:
+### step 4: clone the repos
 
-```json
-{
-  "type": "service_account",
-  "project_id": "your-project-id",
-  "private_key_id": "abc123...",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBg...\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-abc123@your-project.iam.gserviceaccount.com",
-  ...
-}
+run these one by one in the terminal. just copy each line, paste it (Ctrl + V), and press enter:
+
+```bash
+git clone https://github.com/J-ohan1/DTEvents-Website.git
 ```
 
-11. From this file, copy these three values to your Vercel environment variables:
-    - `"project_id"` value → paste as `FIREBASE_PROJECT_ID`
-    - `"client_email"` value → paste as `FIREBASE_CLIENT_EMAIL`
-    - `"private_key"` value → paste as `FIREBASE_PRIVATE_KEY`
+wait for it to finish, then:
 
-**CRITICAL for `FIREBASE_PRIVATE_KEY`:** You must copy the **ENTIRE** value including the `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` parts. When you paste it into Vercel, make sure the `\n` characters stay as `\n` — do NOT replace them with actual newlines. Vercel should handle this automatically if you paste the raw value.
+```bash
+git clone https://github.com/J-ohan1/DTEvents-Bot.git
+```
 
-12. **DELETE** the downloaded JSON file from your computer after copying the values. This is a secret key — you don't want it sitting on your hard drive.
+wait for it to finish, then:
+
+```bash
+git clone https://github.com/J-ohan1/DTEvents-RobloxHub.git
+```
+
+you should now see 3 folders inside your DTEvents folder in vs code:
+- `DTEvents-Website`
+- `DTEvents-Bot`
+- `DTEvents-RobloxHub`
+
+thats all your code. if you ever need to pull the latest changes i pushed, you just open that folder in vs code and run `git pull` in the terminal.
 
 ---
 
-## Step-by-Step: Set Firebase Database Rules
+## how to push changes (important read this)
 
-Database rules control **who can read and write data** in your Firebase database. If these are wrong, the website will break.
+ok so this is how you push changes when you edit code. you'll do this a lot so memorize it.
 
-### Where to find the rules:
-1. Go to **Firebase Console** → your project
-2. Click **"Realtime Database"** in the left sidebar
-3. Click the **"Rules"** tab at the top
+1. open the folder you want to change in vs code (File → Open Folder → select the repo folder)
+2. make your changes to whatever file you need to edit
+3. press **Ctrl + S** to save the file
+4. open the terminal (**Ctrl + `**)
+5. run these commands one by one:
 
-### What to paste:
-**Delete everything** in the rules editor and paste this EXACTLY:
+```bash
+git add .
+git commit -m "what you changed"
+git push
+```
+
+- `git add .` — stages all your changes (the dot means "everything")
+- `git commit -m "message"` — saves a snapshot with a message describing what you did
+- `git push` — uploads it to github
+
+**thats it.** every time you push to github, vercel automatically rebuilds the website. you dont have to do anything else for the website.
+
+for the bot its slightly different, i'll explain that in the bot section.
+
+---
+
+## firebase setup
+
+both the website and the bot need firebase. this is the database where everything is stored — products, users, carts, all of it.
+
+### create the project
+
+1. go to https://console.firebase.google.com
+2. sign in with your google account
+3. click **"Create a project"** (or "Add project")
+4. name it something like `DTEvents` or whatever you want
+5. you can disable google analytics, we dont need it
+6. click **Create project**, wait for it to finish
+
+### create the realtime database
+
+1. in your firebase project, click **"Build"** → **"Realtime Database"** in the left sidebar
+2. click **"Create Database"**
+3. pick a location closest to your users
+4. **IMPORTANT** — select **"Start in test mode"** for now
+5. click **Enable**
+
+### copy your database url
+
+at the top of the realtime database page you'll see a url like:
+```
+https://dt-events-abc123-default-rtdb.firebaseio.com
+```
+copy that whole thing. you'll need it later.
+
+### copy your project id
+
+1. click the **gear icon** (top left near "Project Overview") → **"Project settings"**
+2. under the "General" tab you'll see your **Project ID**
+3. copy it
+
+### get the service account key
+
+this is what lets the website and bot write to the database. do NOT share this with anyone.
+
+1. still in project settings, click the **"Service accounts"** tab at the top
+2. scroll down to "Firebase Admin SDK"
+3. click **"Generate new private key"**
+4. click **"Generate key"** on the popup
+5. a JSON file will download to your computer
+6. open it with notepad or any text editor
+7. you need 3 things from it:
+   - `"project_id"` — your firebase project id
+   - `"client_email"` — looks like `firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com`
+   - `"private_key"` — a long string that starts with `-----BEGIN PRIVATE KEY-----` and ends with `-----END PRIVATE KEY-----`
+
+8. **delete** the downloaded JSON file after you copy those values. dont leave it sitting on your computer.
+
+### set the database rules
+
+1. go to **Realtime Database** → **Rules** tab
+2. **delete everything** in the editor and paste this exactly:
 
 ```json
 {
@@ -273,516 +251,421 @@ Database rules control **who can read and write data** in your Firebase database
 }
 ```
 
-### What each rule does:
-| Path | What It Stores | Read | Write | Why |
-|---|---|---|---|---|
-| `products` | All products on the store | Anyone | Nobody (only server) | Products are created through the Owner Panel (server-side) |
-| `userProducts` | Which products each user owns | Anyone | Anyone | Needed for the claim/purchase system |
-| `tempCarts` | Shopping carts in progress | Anyone | Anyone | Needed for cart system to work |
-| `auditLogs` | Record of admin actions | Anyone | Anyone | Needed for logging |
-| `siteConfig` | Website configuration | Anyone | Nobody | Only the server should modify this |
-| `rbxmFiles` | Downloadable .rbxm files | Anyone | Nobody | Files are uploaded through the Owner Panel (server-side) |
-| `userLinks` | User account links | Anyone | Anyone | Needed for user accounts |
-| `verificationCodes` | Login verification codes | Anyone | Anyone | Needed for the Discord login system |
-
-### How to apply:
-1. Paste the rules above into the editor
-2. Click **"Publish"**
-3. The rules are now live!
-
-**NOTE:** After publishing, if Firebase warns about indexes, ignore it — the `.indexOn` rule for `userProducts` handles the important one.
+3. click **Publish**
 
 ---
 
-## Step-by-Step: Create a Discord Webhook
+## discord bot setup
 
-A webhook lets the website automatically send messages to your Discord server (like when a new product is announced).
+the bot handles login codes, account linking, and all the slash commands. without it nobody can log into the website.
 
-### Step 1: Open Discord Server Settings
-1. Open **Discord** (desktop app or browser)
-2. Go to your server
-3. Right-click the server name → **"Server Settings"** (or click the server name at the top left)
-4. Click **"Integrations"** in the left sidebar
-5. Click **"Webhooks"**
-6. Click **"New Webhook"**
+### create the bot application
 
-### Step 2: Configure the Webhook
-1. **Name:** Give it a name like "DT Events Bot"
-2. **Channel:** Choose the channel where you want announcements (e.g. `#announcements`)
-3. Click **"Copy Webhook URL"** — this is your `DISCORD_WEBHOOK_URL`
+1. go to https://discord.com/developers/applications
+2. click **"New Application"**
+3. name it `DT Events Bot` or whatever
+4. click **"Bot"** in the left sidebar
+5. click **"Reset Token"** → copy the token immediately. you will NOT be able to see it again. save it somewhere safe.
+6. scroll down to **"Privileged Gateway Intents"** and turn ON:
+   - **Message Content Intent**
+   - **Server Members Intent**
+7. click **Save Changes**
 
-### Step 3: Save It
-1. Go to **Vercel** → your project → **Settings** → **Environment Variables**
-2. Add a variable named `DISCORD_WEBHOOK_URL` with the URL you just copied
+### invite the bot to the server
 
-**The webhook URL looks something like:**
-`https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz123456`
+1. go to **"OAuth2"** → **"URL Generator"**
+2. check **"bot"** under Scopes
+3. check **"Administrator"** under Bot Permissions
+4. copy the generated url, open it in your browser
+5. select the DT Events server and click **Authorize**
 
----
+### the ids you need
 
-## Step-by-Step: Create a Discord Bot
+you already have these but just in case:
 
-The Discord bot handles user login. When someone wants to log into the website, the bot DMs them a verification code.
+| What | ID |
+|------|-----|
+| Guild ID (server id) | `1416818305527714035` |
+| Admin Role ID | `1417477583645446264` |
+| Booster Role ID | `1464428369650123030` |
 
-### Step 1: Create the Application
-1. Go to https://discord.com/developers/applications
-2. Click **"New Application"**
-3. Give it a name (e.g. "DT Events Bot")
-4. Click **"Create"**
-5. Accept the developer terms
+to get IDs from discord you need developer mode on:
+1. discord settings → **Advanced** → turn on **Developer Mode**
+2. right-click server icon → **Copy ID** (for guild id)
+3. right-click a role → **Copy ID** (for role ids)
+4. right-click a user → **Copy ID** (for user ids)
 
-### Step 2: Get the Bot Token
-1. In your application, click **"Bot"** in the left sidebar
-2. Click **"Reset Token"** (or "Copy" if it already exists)
-3. Confirm by clicking "Yes, do it!"
-4. **Copy the token immediately** — you will NOT be able to see it again!
-5. This token goes into the **DTEvents-Bot** project (a separate bot, not this website)
+### the webhook
 
-### Step 3: Enable Message Content Intent
-1. Still on the **"Bot"** page
-2. Scroll down to **"Privileged Gateway Intents"**
-3. Turn ON **"Message Content Intent"**
-4. Click **"Save Changes"**
+you already made this but heres the info:
+- channel: `#announcements`
+- webhook name: `DT-Notices`
+- webhook url is saved in vercel as `DISCORD_WEBHOOK_URL`
 
-**This is CRITICAL.** Without this, the bot cannot read messages and the login system will not work.
-
-### Step 4: Invite the Bot to Your Server
-1. In your application, click **"OAuth2"** → **"URL Generator"**
-2. Under "Scopes", check the box for **"bot"**
-3. Under "Bot Permissions", check the box for **"Administrator"** (or at minimum: Send Messages, Use Application Commands)
-4. Scroll down and copy the **"Generated URL"**
-5. Open that URL in your browser
-6. Select your server from the dropdown
-7. Click **"Authorize"**
-8. Complete the CAPTCHA
-9. The bot should now appear in your Discord server!
+if you ever need to make a new one:
+1. go to server settings → **Integrations** → **Webhooks**
+2. click **New Webhook**
+3. pick the announcements channel, name it, click **Copy Webhook URL**
 
 ---
 
-## Step-by-Step: Deploy on Vercel
+## deploying the website on vercel
 
-Vercel takes your code from GitHub and puts it on the internet. Every time you push changes to GitHub, Vercel automatically updates the website.
+the website auto-deploys from github. every time you push to the main branch vercel rebuilds it.
 
-### Step 1: Push Code to GitHub
-1. Make sure the code is in a GitHub repository (e.g. `DTEvents-Website`)
-2. The repository must be set to **Public** or **Private** (both work)
+### first time setup
 
-### Step 2: Connect Vercel to GitHub
-1. Go to https://vercel.com
-2. Click **"Sign Up"** (or "Log In")
-3. Choose **"Continue with GitHub"**
-4. Authorize Vercel to access your GitHub account
+1. go to https://vercel.com and log in with your github account
+2. click **"Add New..."** → **"Project"**
+3. find **DTEvents-Website** in the list and click **Import**
+4. framework preset should auto-detect as **Next.js**, leave everything default
+5. scroll down to **Environment Variables** and add ALL of these:
 
-### Step 3: Import Your Project
-1. In Vercel dashboard, click **"Add New..."** → **"Project"**
-2. You'll see your GitHub repositories — find **DTEvents-Website**
-3. Click **"Import"**
+| Variable Name | What To Put |
+|--------------|-------------|
+| `FIREBASE_PROJECT_ID` | your firebase project id |
+| `FIREBASE_CLIENT_EMAIL` | the client_email from the service account key |
+| `FIREBASE_PRIVATE_KEY` | the private_key from the service account key (the whole thing including BEGIN and END lines) |
+| `FIREBASE_DATABASE_URL` | your firebase database url |
+| `DISCORD_WEBHOOK_URL` | the discord webhook url |
+| `NEXT_PUBLIC_ROBLOX_HUB_URL` | the roblox game url (e.g. `https://www.roblox.com/games/PLACEID/DT-Events`) |
+| `NEXTAUTH_SECRET` | a random string, generate one at https://generate-secret.vercel.app/32 |
+| `NEXTAUTH_URL` | your vercel website url (e.g. `https://dt-events.vercel.app`) |
 
-### Step 4: Configure the Project
-1. **Framework Preset:** Select **"Next.js"** (it should auto-detect this)
-2. **Build Command:** Leave as default (`next build`)
-3. **Output Directory:** Leave as default
+6. click **Deploy** and wait for it to build (1-3 minutes)
+7. once its green youre live
 
-### Step 5: Add ALL Environment Variables
-This is the most important step. **The website will NOT work without these.**
+### updating the website
 
-Scroll down to "Environment Variables" and add every single one:
+just push code to github. seriously thats it.
+```
+git add .
+git commit -m "your change"
+git push
+```
+vercel picks it up automatically. go to the vercel dashboard if you want to watch the build.
 
-| Variable Name | Example Value |
-|---|---|
-| `FIREBASE_PROJECT_ID` | `dt-events-12345` |
-| `FIREBASE_CLIENT_EMAIL` | `firebase-adminsdk@dt-events-12345.iam.gserviceaccount.com` |
-| `FIREBASE_PRIVATE_KEY` | `-----BEGIN PRIVATE KEY-----\nMIIEvg...\n-----END PRIVATE KEY-----` |
-| `FIREBASE_DATABASE_URL` | `https://dt-events-default-rtdb.firebaseio.com` |
-| `DISCORD_WEBHOOK_URL` | `https://discord.com/api/webhooks/...` |
-| `NEXT_PUBLIC_ROBLOX_HUB_URL` | `https://www.roblox.com/games/123456/DT-Events` |
-| `NEXTAUTH_SECRET` | (a long random string — see section below) |
-| `NEXTAUTH_URL` | `https://your-site.vercel.app` |
+### if you change environment variables
 
-### Step 6: Deploy
-1. Click **"Deploy"**
-2. Wait 1-3 minutes for the build to complete
-3. If successful, you'll see a green checkmark and your website URL!
-
-### Step 7: Auto-Deploy is Now On
-From now on, **every time you push code to GitHub**, Vercel will automatically rebuild and redeploy the website. You don't have to do anything — it just works.
+1. go to vercel → your project → **Settings** → **Environment Variables**
+2. edit/add what you need
+3. go to **Deployments** → click the three dots on the latest deployment → **Redeploy**
 
 ---
 
-## Step-by-Step: Generate a NextAuth Secret
+## deploying the bot on JustRunMy.App
 
-The `NEXTAUTH_SECRET` is a random string that keeps user sessions secure.
+the bot runs on JustRunMy.App which is basically a hosting service that runs a docker container 24/7. you already set this up with me but heres the full guide in case you need to redo it.
 
-### Option 1: Use an Online Generator
-1. Go to any random string generator website
-2. Generate a 64+ character random string
-3. Paste it as `NEXTAUTH_SECRET`
+### what you need to know
 
-### Option 2: Use Node.js (if you have it installed)
-Open your terminal/command prompt and run:
+- the bot uses a `Dockerfile` — this is a file that tells docker how to build the bot. you dont need to understand it, just know it exists.
+- when you push code to JustRunMy.App's git remote, it automatically builds and deploys.
+- **you have to restart the bot every 3 days.** JustRunMy.App has a session limit. set a reminder on your phone. if you forget the bot goes offline and nobody can log into the website.
+
+### first time setup
+
+1. go to https://justrunmy.app and log in
+2. click **"Create Application"**
+3. choose **Docker** as the deploy method
+4. follow the prompts
+
+### connect git push (advanced tab)
+
+this is how you push code to JustRunMy.App. you only set up the remote once.
+
+1. in your app dashboard, go to **Settings** (or **Advanced**) tab
+2. find the **Git Push** section — it shows a git url like `https://justrunmy.app/git/r_XXXXX`
+3. open vs code, open the `DTEvents-Bot` folder (File → Open Folder)
+4. open terminal (Ctrl + `)
+5. add the remote:
 
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+git remote add justrunmy https://justrunmy.app/git/r_Pd9j4R
 ```
 
-This will output something like:
-```
-a1b2c3d4e5f6...64 characters long...
-```
+replace the url with whatever yours shows in the dashboard.
 
-Copy the entire output and paste it as `NEXTAUTH_SECRET` in Vercel.
+6. push the code:
 
----
-
-## How the Login System Works
-
-The website uses a **verification code system through Discord** — NOT a regular username/password login.
-
-Here's the flow:
-
-```
-Step 1: User clicks "Login" on the website
-              |
-Step 2: Website tells the Discord bot to generate a 6-character code
-              |
-Step 3: Discord bot DMs the code to the user on Discord
-              |
-Step 4: User enters the code on the website
-              |
-Step 5: Website checks Firebase to see if the code matches
-              |
-Step 6: If it matches, the user is logged in!
-              |
-Step 7: The user's Discord roles determine their permissions:
-         - Owner role  → Full access (Owner Panel, Admin Panel, everything)
-         - Admin role  → Admin access (Admin Panel, grant/revoke products)
-         - Booster role → Booster access (Booster Zone with exclusive products)
-         - Regular user → Basic access (browse, buy, download owned products)
+```bash
+git push justrunmy master
 ```
 
-**Important:** The Discord bot must be running and able to DM users for this to work. If the bot is offline, nobody can log in.
+wait for the build to finish. you'll see all the docker build steps in the terminal.
+
+### set environment variables on JustRunMy.App
+
+1. in your app dashboard → **Settings** → **Environment Variables**
+2. add all of these:
+
+| Variable | What To Put |
+|----------|------------|
+| `DISCORD_TOKEN` | the bot token from discord developer portal |
+| `GUILD_ID` | `1416818305527714035` |
+| `ADMIN_ROLE_ID` | `1417477583645446264` |
+| `BOOSTER_ROLE_ID` | `1464428369650123030` |
+| `OWNER_USER_ID` | your discord user id |
+| `BOT_OWNER_USER_ID` | your discord user id (same thing) |
+| `FIREBASE_PROJECT_ID` | your firebase project id |
+| `FIREBASE_CLIENT_EMAIL` | the client_email from the service account key |
+| `FIREBASE_PRIVATE_KEY` | the private_key (wrap it in double quotes `"..."`) |
+| `FIREBASE_DATABASE_URL` | your firebase database url |
+
+3. save and **restart the app**
+
+### updating the bot
+
+1. open the `DTEvents-Bot` folder in vs code
+2. pull the latest code: `git pull origin master`
+3. push to JustRunMy.App: `git push justrunmy master`
+4. wait for the auto-rebuild
+
+### restarting the bot (every 3 days)
+
+1. go to https://justrunmy.app
+2. find your bot app
+3. click **Restart**
+4. wait for it to come back online
+
+thats it. do this every 3 days or everything breaks.
 
 ---
 
-## How the Product System Works
+## roblox hub setup
 
-### Where Products Live
-All products are stored in Firebase Realtime Database under the `products/` path.
+the roblox hub is a game inside roblox that acts as a store. when someone clicks "checkout" on the website they get redirected here.
 
-### What a Product Looks Like
-Each product has these properties:
+### what you need
 
-| Property | What It Means | Example |
-|---|---|---|
-| `name` | Product name | `"Pioneer DJM-V10"` |
-| `description` | What the product is | `"Professional DJ mixer"` |
-| `price` | Price in Robux | `0` for free, `500` for paid |
-| `images` | Array of image URLs | `["/Images/pioneer-djm-v10-front.png"]` |
-| `tags` | Category tags | `["DJ", "Mixer", "Pioneer"]` |
-| `type` | Product type | `"dj_equipment"` |
-| `gamepassId` | Roblox gamepass ID | `"123456789"` (null for free products) |
-| `maker` | Who made it | `"DT Events"` |
-| `boosterExclusive` | Only for boosters? | `true` or `false` |
+1. **Roblox Studio** — download it from https://create.roblox.com (its free)
+2. **The firebase url** — you already have this from the firebase setup
+3. **A Roblox account** — you have one
 
-### Free vs. Paid Products
+### setting up the game
 
-**Free Products (price = 0):**
-1. User clicks "Claim" on the product
-2. Product is immediately added to their "My Products" page
-3. No cart, no checkout, no gamepass needed
-4. User can download the file right away
+1. open **Roblox Studio**
+2. create a new game (Baseplate template is fine)
+3. in the **Explorer** panel (right side), create folders:
+   - right-click **ReplicatedStorage** → Insert Object → Folder → name it `Shared`
+   - right-click **ServerScriptService** → Insert Object → Folder → name it `Server`
 
-**Paid Products (price > 0):**
-1. User clicks "Add to Cart"
-2. User goes to cart and clicks "Checkout"
-3. Website redirects user to Roblox to purchase the gamepass
-4. After purchasing, the product appears in "My Products"
-5. User can then download the file
+4. now add the scripts. open each file from the `DTEvents-RobloxHub` repo in a text editor, copy the code, and paste it into roblox studio:
 
-### How Downloads Work
-- Product files (.rbxm format) are stored in Firebase under `rbxmFiles/{productId}`
-- Files are stored as base64-encoded strings (basically, text that represents a file)
-- When a user clicks "Download", the website:
-  1. Checks if the user actually owns the product (from `userProducts`)
-  2. If yes, converts the base64 data back into a file
-  3. Sends the file to the user for download
-  4. If no, shows an error: "You do not own this product"
+   | File From Repo | Where In Roblox | Script Type |
+   |---------------|----------------|-------------|
+   | `Shared/ProductConfig.lua` | ReplicatedStorage → Shared | **ModuleScript** |
+   | `Shared/FirebaseModule.lua` | ReplicatedStorage → Shared | **ModuleScript** |
+   | `Server/ProductService.lua` | ServerScriptService → Server | **Script** (NOT LocalScript!!) |
+   | `Client/ProductHub.lua` | StarterGui | **LocalScript** (NOT Script!!) |
 
----
+   ⚠️ getting the script type wrong is the #1 thing that breaks stuff. `ProductService` MUST be a regular Script. `ProductHub` MUST be a LocalScript.
 
-## Key Features Overview
+5. open **ProductConfig** and find the line that says `FirebaseUrl = ""`. replace it with your firebase url:
 
-### Landing Page
-- Hero section with branding
-- Product previews (shows a few featured products)
-- Services section
-- Footer with links
-
-### Hub (the main app after login)
-Users see different sections based on their permissions:
-
-| Section | Who Can See It | What It Does |
-|---|---|---|
-| **Product Store** | Everyone | Browse and search all available products |
-| **My Products** | Everyone (after login) | View products you own, download files |
-| **Booster Zone** | Users with Booster role | Products exclusive to server boosters |
-| **Admin Panel** | Admins and Owners | Grant/revoke products, view audit logs |
-| **Owner Panel** | Owners only | Create/edit/delete products, upload files, announce products |
-
-### Owner Panel Features
-- **Product Creation Wizard:** Step-by-step product creation
-  1. Basic info (name, description, price)
-  2. Images (upload product images)
-  3. File upload (upload .rbxm files)
-  4. Settings (tags, type, booster exclusive toggle)
-- **Product Editing:** Edit any existing product
-- **Product Deletion:** Delete products (cascade — also removes from all users' "My Products")
-- **Announcements:** Send a formatted announcement to Discord with @everyone ping and a rich embed (includes product image, name, description, price, and link)
-
-### Cart System
-- Add/remove products
-- Cart is saved to Firebase (`tempCarts/`) so it persists across sessions
-- Cart syncs with the Roblox game for checkout
-- Empty cart button
-
-### Other Features
-- **Dark mode / Light mode toggle**
-- **Mobile responsive** (works on phones and tablets)
-- **Search and filter** products by name, tag, type, price range
-- **Audit logging** (tracks who did what and when)
-
----
-
-## Project Structure (What Each Folder Does)
-
-If you ever need to look at the code, here's what everything is:
-
-```
-dt-events-website/
-├── public/                    # Static files (images, logos, robots.txt)
-│   ├── Images/                # Product images (.png files)
-│   ├── logo.png               # The DT Events logo
-│   └── robots.txt             # Tells search engines how to crawl the site
-│
-├── src/                       # ALL the source code lives here
-│   ├── app/                   # Next.js app router (web pages and API routes)
-│   │   ├── page.tsx           # The landing page (homepage)
-│   │   ├── layout.tsx         # The main layout (wraps every page)
-│   │   ├── globals.css        # Global styles
-│   │   └── api/               # API routes (server-side code)
-│   │       ├── products/      # Product-related APIs
-│   │       ├── cart/          # Cart API
-│   │       ├── download/      # File download API (with ownership check)
-│   │       ├── upload/        # File upload API (owner only)
-│   │       ├── admin/         # Admin APIs (grant, revoke, audit)
-│   │       ├── user/          # User profile and products APIs
-│   │       └── auth/          # Authentication API
-│   │
-│   ├── components/            # UI components (the visual pieces)
-│   │   ├── auth/              # Login modal, user menu
-│   │   ├── landing/           # Landing page sections (hero, footer, etc.)
-│   │   ├── hub/               # Hub page sections (store, cart, panels)
-│   │   ├── ui/                # Reusable UI components (buttons, cards, etc.)
-│   │   └── providers.tsx      # App-level providers (theme, auth context)
-│   │
-│   ├── hooks/                 # React hooks (reusable logic)
-│   │   ├── use-toast.ts       # Toast notification system
-│   │   └── use-mobile.ts      # Detect mobile screens
-│   │
-│   ├── stores/                # State management (Zustand)
-│   │   ├── auth-store.ts      # User authentication state
-│   │   └── cart-store.ts      # Shopping cart state
-│   │
-│   ├── lib/                   # Utility libraries
-│   │   ├── firebase.ts        # Firebase connection setup
-│   │   ├── auth.ts            # Authentication helpers
-│   │   ├── db.ts              # Database helper functions
-│   │   └── utils.ts           # General utility functions
-│   │
-│   └── types/                 # TypeScript type definitions
-│       └── index.ts           # All type definitions (Product, User, etc.)
-│
-├── package.json               # Project dependencies (like a recipe of what the project needs)
-├── next.config.ts             # Next.js configuration
-├── tailwind.config.ts         # Tailwind CSS configuration (colors, fonts, etc.)
-├── tsconfig.json              # TypeScript configuration
-├── eslint.config.mjs          # Code quality checker configuration
-├── postcss.config.mjs         # CSS processing configuration
-├── prisma/                    # Prisma ORM (not actively used, can ignore)
-├── bun.lock                   # Dependency lock file (ensures consistent versions)
-└── Caddyfile                  # Caddy web server config (for self-hosting, not needed with Vercel)
+```lua
+FirebaseUrl = "https://your-project-default-rtdb.firebaseio.com",
 ```
 
----
+no `/` at the end. no `.json`. just the raw url.
 
-## Troubleshooting Common Problems
+6. **enable HTTP requests** — Game Settings → Security → turn ON "Allow HTTP Requests"
 
-### "Missing required Firebase environment variables"
-**What it means:** The website can't connect to Firebase because it's missing one or more of the 4 required Firebase variables.
-**How to fix:**
-1. Go to Vercel → your project → Settings → Environment Variables
-2. Make sure ALL of these are set with correct values:
-   - `FIREBASE_PROJECT_ID`
-   - `FIREBASE_CLIENT_EMAIL`
-   - `FIREBASE_PRIVATE_KEY`
-   - `FIREBASE_DATABASE_URL`
-3. **Important:** After adding environment variables, you must **redeploy** the website for changes to take effect. Go to Vercel → Deployments → click the three dots on the latest deployment → **"Redeploy"**.
+7. publish the game — File → Publish to Roblox
 
-### "Firebase warning: Using an unspecified index"
-**What it means:** Firebase is suggesting you add an index to make database queries faster.
-**How to fix:** This is just a warning, NOT an error. The website still works. But to fix it, make sure your Firebase rules include `.indexOn: ["userId"]` under `userProducts` (shown in the [Firebase Rules](#step-by-step-set-firebase-database-rules) section).
+8. make the game public so the checkout link works
 
-### Webhook not sending @everyone
-**What it means:** The Discord announcement message is sent but doesn't ping @everyone.
-**How to fix:**
-1. Make sure `DISCORD_WEBHOOK_URL` is correct in Vercel
-2. Make sure the webhook is in the correct channel
-3. Discord sometimes requires the bot/user who created the webhook to have the right permissions in the channel
+### connecting the hub to the website
 
-### Roblox hub shows "Something went wrong"
-**What it means:** The website can't read data from Firebase. Usually a database rules problem.
-**How to fix:**
-1. Go to Firebase Console → Realtime Database → Rules
-2. Make sure ALL paths have `.read: true` (see the rules section above)
-3. Publish the rules
-4. Refresh the website
-
-### Products not showing
-**What it means:** The product list is empty on the website.
-**How to fix:**
-1. Check Firebase rules — `products` must have `.read: true`
-2. Check that products actually exist in Firebase (go to Firebase Console → Realtime Database → click on `products`)
-3. If products exist but aren't showing, check the browser console (F12 → Console tab) for errors
-
-### Login not working
-**What it means:** Users can't log in (code never arrives, or code doesn't verify).
-**How to fix:**
-1. Make sure the **Discord bot is running** (it's a separate application — `DTEvents-Bot`)
-2. Make sure the bot can DM users (the user hasn't blocked DMs from server members)
-3. Make sure `verificationCodes` has `.read: true` and `.write: true` in Firebase rules
-4. Check that the bot has **Message Content Intent** enabled in the Discord Developer Portal
-
-### Download fails with "You do not own this product"
-**What it means:** The user is trying to download a file for a product they haven't claimed or purchased.
-**How to fix:**
-1. The user needs to go to "My Products" and confirm the product is listed there
-2. If the product isn't there, they need to claim it (if free) or purchase it (if paid) first
-3. If the user just purchased it, it might take a moment for the system to update — try refreshing
-
-### Build fails on Vercel
-**What it means:** The website failed to build when deploying.
-**How to fix:**
-1. Go to Vercel → your project → Deployments
-2. Click on the failed deployment (it will be marked with an X)
-3. Read the build logs — the error message is usually at the bottom
-4. Common causes:
-   - Missing environment variable (check ALL variables are set)
-   - Code syntax error (someone made a typo in the code)
-   - Dependency issue (a package update broke something)
-
-### Cart not syncing with Roblox
-**What it means:** Items added to the cart aren't being saved or checked out properly.
-**How to fix:**
-1. Make sure `tempCarts` has `.write: true` in Firebase rules
-2. Check the browser console for errors (F12 → Console)
-3. Make sure the user is logged in (cart requires authentication)
+1. copy your game's url from roblox (looks like `https://www.roblox.com/games/123456/...`)
+2. go to vercel → DTEvents-Website → Settings → Environment Variables
+3. set `NEXT_PUBLIC_ROBLOX_HUB_URL` to that url
+4. redeploy
 
 ---
 
-## Daily Operations Guide
+## how everything works together
 
-### Adding a New Product
-1. Log into the website as the owner
-2. Go to the **Owner Panel**
-3. Click **"Create Product"**
-4. Follow the step-by-step wizard:
-   - Step 1: Enter name, description, price, tags, type
-   - Step 2: Upload product images
-   - Step 3: Upload the .rbxm file (the actual Roblox model)
-   - Step 4: Set additional options (booster exclusive, gamepass ID for paid products)
-5. Click **"Create"**
-6. The product is now live on the store!
+read this so you understand the full picture.
 
-### Editing a Product
-1. Go to Owner Panel
-2. Find the product in the list
-3. Click **"Edit"**
-4. Make your changes
-5. Click **"Save"**
+### login flow
+```
+user clicks "Login" on website
+    → bot DMs them a 6-digit code
+    → user enters code on website
+    → website checks firebase, code matches
+    → user is logged in
+    → their discord roles determine what they can see
+```
 
-### Deleting a Product
-1. Go to Owner Panel
-2. Find the product
-3. Click **"Delete"**
-4. Confirm the deletion
-5. **WARNING:** This removes the product from ALL users' "My Products" pages too (cascade delete). The .rbxm file is also deleted from Firebase.
+### buying a product
+```
+free product:
+    user clicks "Claim" → product added to their account instantly
 
-### Announcing a Product
-1. Go to Owner Panel
-2. Find the product
-3. Click **"Announce"**
-4. A formatted message with an image embed and @everyone ping will be sent to your Discord server's announcements channel (wherever the webhook is set up)
+paid product:
+    user adds to cart → goes to checkout → redirected to roblox hub
+    → buys the gamepass in roblox → purchase recorded in firebase
+    → product appears in "My Products" on website
+    → user can download the .rbxm file
+```
 
-### Granting a Product to a User (Admin)
-1. Go to **Admin Panel**
-2. Use the "Grant Product" feature
-3. Enter the user's Discord ID and the product ID
-4. The product will appear in the user's "My Products"
+### announcements
+```
+you go to Owner Panel → click "Announce" on a product
+    → website sends a webhook to discord
+    → message posts in #announcements with @everyone
+    → includes product image, name, price, link
+```
 
-### Revoking a Product from a User (Admin)
-1. Go to **Admin Panel**
-2. Use the "Revoke Product" feature
-3. Enter the user's Discord ID and the product ID
-4. The product will be removed from the user's "My Products"
+### permissions
+| Role | What They Can Do |
+|------|-----------------|
+| Owner (you) | everything — owner panel, admin panel, create/edit/delete products, announce |
+| Admin | admin panel, grant/revoke products, audit logs |
+| Booster | access to booster exclusive products |
+| Everyone | browse, buy, download owned products |
 
 ---
 
-## Important Things to Remember
+## daily operations (stuff you'll do regularly)
 
-1. **NEVER share your environment variables.** They are secret keys that give full access to your database and services. Treat them like passwords.
+### adding a product
+1. log into website as owner
+2. go to **Owner Panel**
+3. click **Create Product**
+4. fill in name, description, price, tags, type
+5. upload images
+6. upload the .rbxm file
+7. click Create
+8. its live
 
-2. **The Discord bot is a SEPARATE project.** This website only handles the web side. The Discord bot (DTEvents-Bot) runs independently and handles the login codes.
+### deleting a product
+1. owner panel → find the product → click Delete
+2. confirm
+3. **warning:** this removes it from EVERYONE's "My Products" too. and deletes the file from firebase. its permanent.
 
-3. **Free products don't need a gamepass.** But paid products MUST have a valid `gamepassId` set in Firebase for the checkout flow to work.
+### announcing a product
+1. owner panel → find the product → click Announce
+2. it posts to #announcements with @everyone
 
-4. **Firebase rules are security-critical.** If you make the wrong rules public, anyone could delete or modify your data. Use the exact rules provided above.
+### giving a product to someone (admin)
+1. admin panel → Grant Product
+2. enter their discord id and product id
 
-5. **Always test after making changes.** After changing environment variables or Firebase rules, redeploy on Vercel and test the website.
-
-6. **The website auto-deploys.** Whenever you push code to the `main` branch on GitHub, Vercel automatically rebuilds and deploys. You don't need to do anything manually.
-
-7. **Backups are important.** Firebase Realtime Database does not have automatic backups. Periodically export your database from Firebase Console → Realtime Database → three dots (top right) → "Export JSON". Save this file somewhere safe.
-
-8. **200 status codes mean success.** If you're looking at server logs and see lots of `200` responses — that means everything is working correctly! 200 = OK. You only need to worry about 4xx and 5xx errors.
-
-9. **The only warnings you'll see** are Firebase index warnings. These are NOT errors — they're just performance suggestions. They can be safely ignored, or you can add the suggested `.indexOn` rules to improve performance.
-
----
-
-## Quick Reference Card
-
-| What You Need | Where It Goes | How to Get It |
-|---|---|---|
-| Firebase Project ID | Vercel → `FIREBASE_PROJECT_ID` | Firebase Console → Project Settings |
-| Firebase Client Email | Vercel → `FIREBASE_CLIENT_EMAIL` | Firebase Admin SDK service account |
-| Firebase Private Key | Vercel → `FIREBASE_PRIVATE_KEY` | Firebase Admin SDK service account |
-| Firebase Database URL | Vercel → `FIREBASE_DATABASE_URL` | Firebase Console → Realtime Database |
-| Discord Webhook URL | Vercel → `DISCORD_WEBHOOK_URL` | Discord Server Settings → Integrations → Webhooks |
-| Roblox Hub URL | Vercel → `NEXT_PUBLIC_ROBLOX_HUB_URL` | Any Roblox game link |
-| NextAuth Secret | Vercel → `NEXTAUTH_SECRET` | Generate with crypto command |
-| NextAuth URL | Vercel → `NEXTAUTH_URL` | Your Vercel website URL |
+### revoking a product
+1. admin panel → Revoke Product
+2. enter their discord id and product id
 
 ---
 
-## Contact & Support
+## important things to remember
 
-If you run into issues that aren't covered in this guide:
+1. **restart the bot every 3 days** or it goes offline and nobody can log in. this is the #1 thing you'll forget.
 
-1. **Check Vercel deployment logs** — they usually tell you exactly what went wrong
-2. **Check Firebase rules** — 90% of problems are caused by incorrect database rules
-3. **Check environment variables** — make sure all 8 variables are set and have correct values
-4. **Search for the error message** — paste any error into Google for solutions
+2. **never share environment variables.** they're secret keys. treat them like passwords.
+
+3. **the website auto-deploys from github.** just push code and vercel handles the rest.
+
+4. **the bot does NOT auto-deploy.** you have to manually push to JustRunMy.App's remote: `git push justrunmy master`
+
+5. **backup firebase periodically.** go to firebase console → realtime database → three dots → Export JSON. save it somewhere safe.
+
+6. **if the bot build fails on JustRunMy.App** — check the terminal output. it'll tell you what went wrong. the most common issue is a missing dependency or typescript error.
+
+7. **if the website build fails on vercel** — check the deployment logs. usually its a missing environment variable.
+
+8. **free products dont need a gamepass.** paid products MUST have a gamepass id.
+
+9. **when you see 200 status codes in logs** — that means everything is working. 200 = good. only worry about 4xx and 5xx errors.
+
+10. **product images in the roblox hub must be roblox asset IDs** (format: `rbxassetid://123456`). external urls like imgur or discord cdn will NOT work in roblox.
 
 ---
 
-*This README was written for the new owner of DT Events. Good luck!*
+## troubleshooting
+
+### "bot is offline in discord"
+the bot process crashed or the 3-day limit hit. go to JustRunMy.App and restart it.
+
+### "slash commands not showing up"
+run `npm run register` in the bot folder terminal. only needs to be done once or when new commands are added.
+
+### "verification codes not working / login broken"
+- is the bot online? check JustRunMy.App dashboard
+- is Message Content Intent turned on in discord developer portal? (Bot tab → Privileged Gateway Intents)
+- is Server Members Intent turned on?
+
+### "products not showing on website"
+- are firebase rules correct? every path needs `.read: true`
+- do products actually exist in firebase? (console.firebase.google.com → realtime database → products)
+- did you redeploy after changing env variables?
+
+### "download says you do not own this product"
+the user hasnt purchased/claimed it yet. they need to go through the checkout or claim flow first.
+
+### "checkout link goes nowhere / something went wrong"
+- is `NEXT_PUBLIC_ROBLOX_HUB_URL` set in vercel?
+- is the roblox game public?
+- is the url correct? no typos.
+
+### "roblox hub shows blank screen / failed to load"
+- is HTTP requests enabled in roblox studio? (Game Settings → Security)
+- is the firebase url correct in ProductConfig.lua?
+- is ProductService a regular Script (not LocalScript)?
+- are firebase rules set to `.read: true` on all paths?
+
+### "webhook not posting to discord"
+- is `DISCORD_WEBHOOK_URL` set in vercel?
+- did you redeploy after setting it?
+- is the webhook in the right channel?
+
+### "bot build fails on JustRunMy.App"
+read the error in the terminal. common causes:
+- typescript compilation error (someone pushed broken code)
+- missing dependency (check package.json)
+- if it says `npx tsc` failed — make sure typescript is in the devDependencies in package.json
+
+---
+
+## quick reference
+
+### website env variables (vercel)
+| Variable | Example |
+|----------|---------|
+| `FIREBASE_PROJECT_ID` | `dt-events-abc123` |
+| `FIREBASE_CLIENT_EMAIL` | `firebase-adminsdk@dt-events.iam.gserviceaccount.com` |
+| `FIREBASE_PRIVATE_KEY` | `-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----` |
+| `FIREBASE_DATABASE_URL` | `https://dt-events-default-rtdb.firebaseio.com` |
+| `DISCORD_WEBHOOK_URL` | `https://discord.com/api/webhooks/...` |
+| `NEXT_PUBLIC_ROBLOX_HUB_URL` | `https://www.roblox.com/games/123/DT-Events` |
+| `NEXTAUTH_SECRET` | `a1b2c3...` (random string) |
+| `NEXTAUTH_URL` | `https://dt-events.vercel.app` |
+
+### bot env variables (JustRunMy.App)
+| Variable | Example |
+|----------|---------|
+| `DISCORD_TOKEN` | `MTIzNDU2...` |
+| `GUILD_ID` | `1416818305527714035` |
+| `ADMIN_ROLE_ID` | `1417477583645446264` |
+| `BOOSTER_ROLE_ID` | `1464428369650123030` |
+| `OWNER_USER_ID` | `your discord id` |
+| `BOT_OWNER_USER_ID` | `your discord id` |
+| `FIREBASE_PROJECT_ID` | same as website |
+| `FIREBASE_CLIENT_EMAIL` | same as website |
+| `FIREBASE_PRIVATE_KEY` | same as website |
+| `FIREBASE_DATABASE_URL` | same as website |
+
+### useful commands
+| What | Command |
+|------|---------|
+| pull latest code | `git pull origin master` |
+| push to github | `git add . && git commit -m "msg" && git push` |
+| push bot to JustRunMy.App | `git push justrunmy master` |
+| register slash commands | `npm run register` (in bot folder) |
+| build bot locally | `npm run build` (in bot folder) |
+| start bot locally | `npm start` (in bot folder) |
+
+---
+
+if something breaks and you cant figure it out from this guide just message me. dont guess and push random stuff that'll make it worse 😭
