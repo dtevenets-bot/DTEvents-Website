@@ -42,8 +42,9 @@ function Checkbox({
       disabled={disabled}
       id={id}
       className={cx(
-        "peer border-field dark:bg-field/30 focus-visible:border-focus-ring focus-visible:ring-focus-ring/50 aria-invalid:ring-err/20 dark:aria-invalid:ring-err/40 aria-invalid:border-err size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center",
-        isChecked && "bg-brand text-brand-fg border-primary",
+        "peer border-field focus-visible:border-focus-ring focus-visible:ring-focus-ring/50 aria-invalid:ring-err/20 dark:aria-invalid:ring-err/40 aria-invalid:border-err size-4 shrink-0 rounded-[4px] border shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center",
+        !isChecked && "dark:bg-field/30",
+        isChecked && "bg-brand text-brand-fg border-brand",
         className
       )}
       onClick={handleClick}
