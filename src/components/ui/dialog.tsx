@@ -53,46 +53,20 @@ function DialogContent({
   ...props
 }: React.ComponentProps<"div"> & { showCloseButton?: boolean }) {
   const { open, setOpen } = React.useContext(DialogContext)
-  const dialogRef = React.useRef<HTMLDialogElement>(null)
-  const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  React.useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-    if (open) {
-      dialog.showModal()
-    } else {
-      dialog.close()
-    }
-  }, [open])
-
-  React.useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-
-    const handleClose = () => setOpen(false)
-    dialog.addEventListener("close", handleClose)
-    return () => dialog.removeEventListener("close", handleClose)
-  }, [setOpen])
-
-  React.useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
+    if (!open) return
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault()
         setOpen(false)
       }
     }
-    dialog.addEventListener("cancel", handleKey)
-    return () => dialog.removeEventListener("cancel", handleKey)
-  }, [setOpen])
+    window.addEventListener("keydown", handleKey)
+    return () => window.removeEventListener("keydown", handleKey)
+  }, [open, setOpen])
 
-  if (!mounted) return null
+  if (!open) return null
 
   const content = (
     <div
@@ -101,13 +75,13 @@ function DialogContent({
       className="fixed inset-0 z-50 flex items-center justify-center"
     >
       <div
-        className="fixed inset-0 z-50 bg-black/50 animate-in fade-in-0 duration-200"
+        className="fixed inset-0 z-50 bg-black/50"
         onClick={() => setOpen(false)}
         aria-hidden="true"
       />
       <div
         className={cx(
-          "bg-page fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg animate-in fade-in-0 zoom-in-95 duration-200 sm:max-w-lg",
+          "bg-page fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg sm:max-w-lg",
           className
         )}
         {...props}
