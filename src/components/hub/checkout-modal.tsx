@@ -92,7 +92,7 @@ export function CheckoutModal() {
               Cart saved successfully! Open the Roblox hub to complete your purchase.
             </p>
             <a
-              href="https://www.roblox.com/games/start?placeId=PLACEHOLDER"
+              href={process.env.NEXT_PUBLIC_ROBLOX_HUB_URL || "https://www.roblox.com/games/135167450428463/DT-Events-Purchasing-Hub"}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all h-9 px-4 py-2 w-full hover:bg-ink hover:text-page"
