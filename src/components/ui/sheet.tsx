@@ -119,11 +119,11 @@ function SheetContent({
   }
 
   const content = (
-    <div className="fixed inset-0 z-50">
+    <div className={cx("fixed inset-0 z-50", open ? "pointer-events-auto" : "pointer-events-none")}>
       <div
         className={cx(
           "fixed inset-0 z-50 bg-black/50 transition-opacity duration-300",
-          open ? "opacity-100" : "opacity-0 pointer-events-none"
+          open ? "opacity-100" : "opacity-0"
         )}
         onClick={() => setOpen(false)}
         aria-hidden="true"
