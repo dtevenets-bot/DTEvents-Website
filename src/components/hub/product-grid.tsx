@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingCartIcon, EyeIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { ShoppingCartIcon, EyeIcon, MagnifyingGlassIcon, GiftIcon } from '@heroicons/react/24/outline';
 import { useCartStore } from '@/stores/cart-store';
 import { ProductFilters } from '@/components/hub/product-filters';
 import { ProductDetailModal } from '@/components/hub/product-detail-modal';
@@ -131,7 +131,9 @@ export function ProductGrid({ boosterOnly = false, showFilters = true }: Product
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-semibold text-sm line-clamp-1">{product.name}</h3>
-                      <span className="text-sm font-medium whitespace-nowrap">R${product.price}</span>
+                      <span className={`text-sm font-medium whitespace-nowrap ${product.price === 0 ? 'text-green-500' : ''}`}>
+                        {product.price === 0 ? 'Free' : `R$${product.price}`}
+                      </span>
                     </div>
                     {product.tags && product.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
@@ -156,14 +158,25 @@ export function ProductGrid({ boosterOnly = false, showFilters = true }: Product
                         <EyeIcon className="size-3 mr-1" />
                         View
                       </Button>
-                      <Button
-                        size="sm"
-                        className="flex-1 text-xs"
-                        onClick={() => handleAddToCart(product)}
-                      >
-                        <ShoppingCartIcon className="size-3 mr-1" />
-                        Add
-                      </Button>
+                      {product.price === 0 ? (
+                        <Button
+                          size="sm"
+                          className="flex-1 text-xs bg-green-500 hover:bg-green-600"
+                          onClick={() => handleViewProduct(product)}
+                        >
+                          <GiftIcon className="size-3 mr-1" />
+                          Get Free
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="flex-1 text-xs"
+                          onClick={() => handleAddToCart(product)}
+                        >
+                          <ShoppingCartIcon className="size-3 mr-1" />
+                          Add
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
