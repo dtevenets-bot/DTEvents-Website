@@ -7,9 +7,10 @@ export function Footer() {
             <img src="/logo.png" alt="DT Events" className="size-8" />
             <div>
               <p className="font-bold text-lg">DT Events</p>
-            <p className="text-sm text-page/60">
-              Premium Roblox Development Solutions
-            </p>
+              <p className="text-sm text-page/60">
+                Premium Roblox Development Solutions
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-6 text-sm text-page/60">

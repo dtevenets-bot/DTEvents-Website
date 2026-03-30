@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   keywords: ["DT Events", "Roblox", "Gamepasses", "Plugins", "Development"],
   authors: [{ name: "DT Events" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.png",
   },
   openGraph: {
     title: "DT Events",
