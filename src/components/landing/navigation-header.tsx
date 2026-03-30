@@ -25,6 +25,7 @@ export function NavigationHeader({ onNavigate }: NavigationHeaderProps) {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="flex items-center gap-2 font-bold text-lg hover:bg-tint hover:text-tint-fg px-3 py-1.5 rounded-md transition-colors"
         >
+          <img src="/logo.png" alt="DT Events" className="size-7" />
           DT Events
         </button>
 

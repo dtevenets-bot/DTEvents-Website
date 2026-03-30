@@ -72,6 +72,7 @@ export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigatio
     <div className="border-b bg-page sticky top-0 z-40">
       <div className="container mx-auto flex items-center justify-between px-4 h-14">
         <div className="flex items-center gap-1">
+          <img src="/logo.png" alt="DT Events" className="size-7 mr-2 hidden sm:block" />
           <span className="font-bold text-lg mr-3 hidden sm:block">DT Events</span>
 
           <nav className="hidden md:flex items-center gap-1">
