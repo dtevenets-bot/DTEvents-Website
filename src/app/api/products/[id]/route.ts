@@ -135,6 +135,13 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     // Permanently delete the product from Firebase
     await db.ref(`products/${id}`).remove();
 
+    // Also remove the attached RBXM file if it exists
+    try {
+      await db.ref(`rbxmFiles/${id}`).remove();
+    } catch (fileErr) {
+      console.warn(`[DELETE /api/products/${id}] Failed to remove attached file:`, fileErr);
+    }
+
     // Clear announcement if this was the announced product
     try {
       const announcedSnapshot = await db.ref('siteConfig/announcedProduct').once('value');

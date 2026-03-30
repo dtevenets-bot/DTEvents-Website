@@ -104,18 +104,19 @@ function SheetContent({
 
   const sideClasses: Record<string, string> = {
     right:
-      "inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm translate-x-full",
+      "inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm",
     left:
-      "inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm -translate-x-full",
-    top: "inset-x-0 top-0 h-auto border-b -translate-y-full",
-    bottom: "inset-x-0 bottom-0 h-auto border-t translate-y-full",
+      "inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm",
+    top: "inset-x-0 top-0 h-auto border-b",
+    bottom: "inset-x-0 bottom-0 h-auto border-t",
   }
 
-  const openTranslate: Record<string, string> = {
-    right: "translate-x-0",
-    left: "translate-x-0",
-    top: "translate-y-0",
-    bottom: "translate-y-0",
+  // Tailwind v4 uses the native 'translate' CSS property, not 'transform'
+  const translateClosed: Record<string, string> = {
+    right: "100% 0",
+    left: "-100% 0",
+    top: "0 -100%",
+    bottom: "0 100%",
   }
 
   const content = (
@@ -132,12 +133,12 @@ function SheetContent({
         role="dialog"
         aria-modal
         className={cx(
-          "bg-page fixed z-50 flex flex-col gap-4 p-4 shadow-lg transition-transform duration-300 ease-in-out",
+          "bg-page fixed z-50 flex flex-col gap-4 p-4 shadow-lg transition-[translate] duration-300 ease-in-out",
           sideClasses[side],
           className
         )}
         style={{
-          transform: open ? openTranslate[side] : undefined,
+          translate: open ? "0 0" : translateClosed[side],
         }}
         {...props}
       >
