@@ -14,9 +14,10 @@ import type { Product, ProductFilters as Filters } from '@/types';
 
 interface ProductGridProps {
   boosterOnly?: boolean;
+  showFilters?: boolean;
 }
 
-export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
+export function ProductGrid({ boosterOnly = false, showFilters = true }: ProductGridProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -66,10 +67,12 @@ export function ProductGrid({ boosterOnly = false }: ProductGridProps) {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
-      <div className="lg:w-64 shrink-0">
-        <ProductFilters onFilterChange={setFilters} />
-      </div>
+    <div className={showFilters ? "flex flex-col lg:flex-row gap-6" : ""}>
+      {showFilters && (
+        <div className="lg:w-64 shrink-0">
+          <ProductFilters onFilterChange={setFilters} />
+        </div>
+      )}
 
       <div className="flex-1">
         {loading ? (
