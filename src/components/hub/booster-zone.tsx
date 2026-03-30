@@ -21,7 +21,7 @@ export function BoosterZone() {
         </div>
       </div>
 
-      <ProductGrid boosterOnly />
+      <ProductGrid boosterOnly showFilters={false} />
     </div>
   );
 }
