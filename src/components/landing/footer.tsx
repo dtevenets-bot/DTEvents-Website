@@ -3,8 +3,10 @@ export function Footer() {
     <footer className="mt-auto border-t bg-ink text-page">
       <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-center md:text-left">
-            <p className="font-bold text-lg">DT Events</p>
+          <div className="flex items-center gap-3 text-center md:text-left">
+            <img src="/logo.png" alt="DT Events" className="size-8" />
+            <div>
+              <p className="font-bold text-lg">DT Events</p>
             <p className="text-sm text-page/60">
               Premium Roblox Development Solutions
             </p>

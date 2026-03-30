@@ -79,6 +79,7 @@ export function HeroSection() {
       </div>
 
       <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
+        <img src="/logo.png" alt="DT Events" className="size-20 sm:size-24 mx-auto mb-6 drop-shadow-lg" />
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
