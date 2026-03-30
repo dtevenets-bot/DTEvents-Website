@@ -183,6 +183,48 @@ export async function POST(req: NextRequest) {
         createdAt: Date.now(),
       };
       await announceAuditRef.set(announceAuditLog);
+
+      // Send Discord webhook announcement
+      const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+      if (webhookUrl) {
+        try {
+          const productPrice = typeof price === 'number' ? price : 0;
+          const priceText = productPrice === 0 ? '**Free**' : `**R$${productPrice}**`;
+          const tagText = Array.isArray(tags) && tags.length > 0 ? tags.map((t) => `\`${t}\``).join(' ') : '';
+          const imageUrl = images?.front || images?.back || '';
+
+          const embed = {
+            title: `🆕 New Product: ${name.trim()}`,
+            description: description || 'No description provided.',
+            color: productPrice === 0 ? 0x22c55e : 0x5865f2,
+            fields: [
+              { name: 'Price', value: priceText, inline: true },
+              { name: 'Type', value: `\`${type || 'other'}\``, inline: true },
+              ...(maker ? [{ name: 'Maker', value: maker, inline: true }] : []),
+            ],
+            ...(tagText ? { footer: { text: tagText } } : {}),
+            ...(imageUrl ? { image: { url: imageUrl } } : {}),
+            timestamp: new Date().toISOString(),
+          };
+
+          await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              content: '@everyone',
+              embeds: [embed],
+              allowed_mentions: {
+                parse: ['everyone'],
+              },
+            }),
+          });
+          console.log(`[POST /api/products] Webhook sent for "${name.trim()}"`);
+        } catch (webhookErr) {
+          console.error('[POST /api/products] Failed to send Discord webhook:', webhookErr);
+        }
+      } else {
+        console.warn('[POST /api/products] DISCORD_WEBHOOK_URL not set, skipping Discord announcement.');
+      }
     }
 
     const createdProduct = parseProduct(productId, productData);
