@@ -68,12 +68,13 @@ export function HeroSection() {
   return (
     <section className="relative w-full h-screen min-h-[600px] overflow-hidden flex items-center justify-center">
       <div className="absolute inset-0 z-0">
-        <iframe
-          src={`https://www.youtube.com/embed/LFbbv8wL00k?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&showinfo=0&rel=0&loop=1&playlist=LFbbv8wL00k&modestbranding=1&playsinline=1&enablejsapi=1`}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] h-[180%] pointer-events-none"
-          allow="autoplay; encrypted-media"
-          allowFullScreen
-          title="Background Video"
+        <video
+          src="/Promotional.mp4"
+          autoPlay
+          muted={isMuted}
+          loop
+          playsInline
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] h-[180%] object-cover pointer-events-none"
         />
         <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
       </div>

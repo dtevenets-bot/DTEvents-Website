@@ -108,7 +108,7 @@ export function ProductsPreview() {
                 variant="outline"
                 className="group hover:bg-ink hover:text-page"
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent('navigate-to-hub', { detail: { tab: 'store' } }));
+                  window.dispatchEvent(new CustomEvent('navigate-to-hub', { detail: { tab: 'products' } }));
                 }}
               >
                 View All Products
