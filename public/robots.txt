@@ -1,14 +1,7 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# DT Events
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+Sitemap: https://test-beige-phi-74.vercel.app/sitemap.xml
