@@ -66,7 +66,7 @@ export function HeroSection() {
   const slide = slides[currentSlide];
 
   return (
-    <section className="relative w-full h-screen min-h-[600px] overflow-hidden flex items-center justify-center">
+    <section id="hero-section" className="relative w-full h-screen min-h-[600px] overflow-hidden flex items-center justify-center">
       <div className="absolute inset-0 z-0">
         <video
           src="/Promotional.mp4"

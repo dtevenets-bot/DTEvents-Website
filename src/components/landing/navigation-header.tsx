@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/auth/user-menu';
 import { Button } from '@/components/ui/button';
@@ -12,13 +12,24 @@ interface NavigationHeaderProps {
 
 export function NavigationHeader({ onNavigate }: NavigationHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
+  const heroRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 60);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Use IntersectionObserver to detect when hero section leaves viewport
+    heroRef.current = document.getElementById('hero-section') as HTMLElement;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setScrolled(!entry.isIntersecting);
+      },
+      { threshold: 0, rootMargin: '-60px 0px 0px 0px' }
+    );
+
+    if (heroRef.current) {
+      observer.observe(heroRef.current);
+    }
+
+    return () => observer.disconnect();
   }, []);
 
   const scrollToSection = (section: string) => {
@@ -34,7 +45,7 @@ export function NavigationHeader({ onNavigate }: NavigationHeaderProps) {
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         scrolled
           ? 'bg-page/80 backdrop-blur-sm border-b border-edge shadow-sm'
-          : 'bg-transparent border-transparent'
+          : 'bg-transparent border-transparent header-on-hero'
       }`}
     >
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
@@ -56,7 +67,7 @@ export function NavigationHeader({ onNavigate }: NavigationHeaderProps) {
             className={`transition-colors ${
               scrolled
                 ? 'hover:bg-tint hover:text-tint-fg'
-                : 'text-white hover:bg-white/10 hover:text-white'
+                : '!text-white hover:!bg-white/10 hover:!text-white'
             }`}
             onClick={() => scrollToSection('services')}
           >
@@ -67,7 +78,7 @@ export function NavigationHeader({ onNavigate }: NavigationHeaderProps) {
             className={`transition-colors ${
               scrolled
                 ? 'hover:bg-tint hover:text-tint-fg'
-                : 'text-white hover:bg-white/10 hover:text-white'
+                : '!text-white hover:!bg-white/10 hover:!text-white'
             }`}
             onClick={() => scrollToSection('products')}
           >
@@ -78,7 +89,7 @@ export function NavigationHeader({ onNavigate }: NavigationHeaderProps) {
             className={`transition-colors ${
               scrolled
                 ? 'hover:bg-tint hover:text-tint-fg'
-                : 'text-white hover:bg-white/10 hover:text-white'
+                : '!text-white hover:!bg-white/10 hover:!text-white'
             }`}
             onClick={() => scrollToSection('commissions')}
           >
@@ -87,15 +98,19 @@ export function NavigationHeader({ onNavigate }: NavigationHeaderProps) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <UserMenu />
+          <div className={scrolled ? '' : '[&>button]:!text-white [&>button:hover]:!bg-white/10 [&>button:hover]:!text-white'}>
+            <ThemeToggle />
+          </div>
+          <div className={scrolled ? '' : '[&_button]:!text-white [&_button:hover]:!bg-white/10 [&_button:hover]:!text-white [&_span]:!text-white'}>
+            <UserMenu />
+          </div>
           <Button
             variant="ghost"
             size="icon"
             className={`md:hidden transition-colors ${
               scrolled
                 ? 'hover:bg-tint hover:text-tint-fg'
-                : 'text-white hover:bg-white/10 hover:text-white'
+                : '!text-white hover:!bg-white/10 hover:!text-white'
             }`}
             onClick={() => scrollToSection('services')}
           >
