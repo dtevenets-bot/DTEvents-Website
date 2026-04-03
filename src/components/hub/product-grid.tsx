@@ -154,7 +154,7 @@ export function ProductGrid({ boosterOnly = false, showFilters = true }: Product
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 text-xs group-hover:border-page/30"
+                        className="flex-1 text-xs group-hover:border-page/30 group-hover:text-page"
                         onClick={() => handleViewProduct(product)}
                       >
                         <EyeIcon className="size-3 mr-1" />

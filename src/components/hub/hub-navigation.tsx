@@ -81,7 +81,7 @@ export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigatio
                 key={tab.id}
                 variant="ghost"
                 size="sm"
-                className={`gap-1.5 ${activeTab === tab.id ? 'bg-ink text-page hover:bg-ink/90 hover:text-page' : 'hover:bg-tint hover:text-tint-fg'}`}
+                className={`gap-1.5 ${activeTab === tab.id ? 'bg-ink text-page' : 'hover:bg-tint hover:text-tint-fg'}`}
                 onClick={() => onTabChange(tab.id)}
               >
                 <tab.icon className="size-3.5" />
@@ -105,7 +105,7 @@ export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigatio
                   <Button
                     key={tab.id}
                     variant={activeTab === tab.id ? 'secondary' : 'ghost'}
-                    className={`justify-start gap-2 ${activeTab === tab.id ? 'bg-ink text-page hover:bg-ink/90 hover:text-page' : 'hover:bg-tint hover:text-tint-fg'}`}
+                    className={`justify-start gap-2 ${activeTab === tab.id ? 'bg-ink text-page' : 'hover:bg-tint hover:text-tint-fg'}`}
                     onClick={() => {
                       onTabChange(tab.id);
                       setMobileOpen(false);

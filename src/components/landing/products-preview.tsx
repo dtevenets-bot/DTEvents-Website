@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { motion } from 'framer-motion';
 import type { Product } from '@/types';
 
 export function ProductsPreview() {
+  const { data: session } = useSession();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,7 +70,7 @@ export function ProductsPreview() {
                   transition={{ duration: 0.3, delay: idx * 0.1 }}
                 >
                   <Card className="overflow-hidden group border transition-colors hover:bg-ink hover:text-page py-0">
-                    <div className="aspect-square bg-soft overflow-hidden">
+                    <div className="aspect-square bg-soft overflow-hidden relative">
                       {product.images?.front ? (
                         <img
                           src={product.images.front}
@@ -108,6 +110,10 @@ export function ProductsPreview() {
                 variant="outline"
                 className="group hover:bg-ink hover:text-page"
                 onClick={() => {
+                  if (!session?.user) {
+                    window.dispatchEvent(new CustomEvent('open-login'));
+                    return;
+                  }
                   window.dispatchEvent(new CustomEvent('navigate-to-hub', { detail: { tab: 'products' } }));
                 }}
               >

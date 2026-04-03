@@ -43,7 +43,7 @@ export function UserMenu() {
     return (
       <Button
         variant="ghost"
-        className="hover:bg-ink hover:text-page"
+        className="hover:bg-tint hover:text-tint-fg"
         onClick={handleLogin}
       >
         <ArrowLeftOnRectangleIcon className="size-4 mr-2" />
