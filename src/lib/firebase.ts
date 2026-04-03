@@ -44,7 +44,14 @@ function getDb(): admin.database.Database {
   return _db;
 }
 
-export const db = getDb();
+// Lazy getter — Firebase only initializes on first actual use at runtime,
+// not at import time. This prevents build failures on Vercel where env
+// vars are not available during static prerendering.
+export const db = new Proxy({} as admin.database.Database, {
+  get(_target, prop) {
+    return (getDb() as any)[prop];
+  },
+});
 
 export function parseProduct(
   id: string,
