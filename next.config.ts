@@ -1,5 +1,13 @@
 import type { NextConfig } from "next";
 
+// Fix: next-auth v4 crashes with "Invalid URL" when NEXTAUTH_URL is an empty string
+// during static page prerendering. This ensures it always has a valid fallback.
+if (!process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL === "") {
+  process.env.NEXTAUTH_URL = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+}
+
 const securityHeaders = [
   {
     key: "X-Frame-Options",
