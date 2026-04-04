@@ -81,7 +81,7 @@ export function HubNavigation({ activeTab, onTabChange, onGoHome }: HubNavigatio
                 key={tab.id}
                 variant="ghost"
                 size="sm"
-                className={`gap-1.5 ${activeTab === tab.id ? 'bg-ink text-page' : 'hover:bg-tint hover:text-tint-fg'}`}
+                className={`gap-1.5 ${activeTab === tab.id ? 'bg-ink text-page hover:bg-ink/80' : 'hover:bg-tint hover:text-tint-fg'}`}
                 onClick={() => onTabChange(tab.id)}
               >
                 <tab.icon className="size-3.5" />

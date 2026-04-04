@@ -103,13 +103,39 @@
   scrollbar-color: oklch(0.5 0 0 / 30%) transparent;
 }
 
+/* ── Product Card – View button stands out on hover ── */
+.group:hover .product-view-btn {
+  border-color: var(--ink) !important;
+  color: var(--ink) !important;
+  background: var(--page) !important;
+}
+.group:hover .product-view-btn svg {
+  color: var(--ink) !important;
+}
+.group:hover .product-view-btn:hover {
+  background: var(--ink) !important;
+  color: var(--page) !important;
+}
+.group:hover .product-view-btn:hover svg {
+  color: var(--page) !important;
+}
+
 /* ── Header on Hero – force white text on all descendants ── */
 .header-on-hero button,
 .header-on-hero span,
 .header-on-hero p,
-.header-on-hero a {
+.header-on-hero a,
+.header-on-hero svg,
+.header-on-hero .size-6,
+.header-on-hero .avatar,
+.header-on-hero .badge {
   color: white !important;
 }
 .header-on-hero button:hover {
   background: rgba(255, 255, 255, 0.1) !important;
+}
+.header-on-hero button:hover svg,
+.header-on-hero button:hover span,
+.header-on-hero button:hover a {
+  color: white !important;
 }

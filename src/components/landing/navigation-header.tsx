@@ -15,7 +15,6 @@ export function NavigationHeader({ onNavigate }: NavigationHeaderProps) {
   const heroRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    // Use IntersectionObserver to detect when hero section leaves viewport
     heroRef.current = document.getElementById('hero-section') as HTMLElement;
 
     const observer = new IntersectionObserver(
@@ -62,55 +61,32 @@ export function NavigationHeader({ onNavigate }: NavigationHeaderProps) {
         </button>
 
         <nav className="hidden md:flex items-center gap-1">
-          <Button
-            variant="ghost"
-            className={`transition-colors ${
-              scrolled
-                ? 'hover:bg-tint hover:text-tint-fg'
-                : '!text-white hover:!bg-white/10 hover:!text-white'
-            }`}
-            onClick={() => scrollToSection('services')}
-          >
-            Services
-          </Button>
-          <Button
-            variant="ghost"
-            className={`transition-colors ${
-              scrolled
-                ? 'hover:bg-tint hover:text-tint-fg'
-                : '!text-white hover:!bg-white/10 hover:!text-white'
-            }`}
-            onClick={() => scrollToSection('products')}
-          >
-            Products
-          </Button>
-          <Button
-            variant="ghost"
-            className={`transition-colors ${
-              scrolled
-                ? 'hover:bg-tint hover:text-tint-fg'
-                : '!text-white hover:!bg-white/10 hover:!text-white'
-            }`}
-            onClick={() => scrollToSection('commissions')}
-          >
-            Commissions
-          </Button>
+          {['services', 'products', 'commissions'].map((section) => (
+            <Button
+              key={section}
+              variant="ghost"
+              className={`transition-colors ${
+                scrolled
+                  ? 'hover:bg-tint hover:text-tint-fg'
+                  : 'hover:bg-white/10'
+              }`}
+              onClick={() => scrollToSection(section)}
+            >
+              {section.charAt(0).toUpperCase() + section.slice(1)}
+            </Button>
+          ))}
         </nav>
 
         <div className="flex items-center gap-2">
-          <div className={scrolled ? '' : '[&>button]:!text-white [&>button:hover]:!bg-white/10 [&>button:hover]:!text-white'}>
-            <ThemeToggle />
-          </div>
-          <div className={scrolled ? '' : '[&_button]:!text-white [&_button:hover]:!bg-white/10 [&_button:hover]:!text-white [&_span]:!text-white'}>
-            <UserMenu />
-          </div>
+          <ThemeToggle />
+          <UserMenu />
           <Button
             variant="ghost"
             size="icon"
             className={`md:hidden transition-colors ${
               scrolled
                 ? 'hover:bg-tint hover:text-tint-fg'
-                : '!text-white hover:!bg-white/10 hover:!text-white'
+                : 'hover:bg-white/10'
             }`}
             onClick={() => scrollToSection('services')}
           >
