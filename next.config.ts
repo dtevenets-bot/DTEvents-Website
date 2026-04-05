@@ -33,7 +33,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://rbxthumb.azurewebsites.net https://tr.rbxcdn.com https://t7.rbxcdn.com",
+      "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://rbxthumb.azurewebsites.net https://tr.rbxcdn.com https://t7.rbxcdn.com https://i.ibb.co https://cdn.discordapp.com",
       "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://discord.com https://cdn-cookieyes.com",
       "frame-src https://www.roblox.com",
       "media-src 'self' blob:",
